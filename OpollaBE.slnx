@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="BLL/BLL.csproj" />
+  <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="OpollaBE/OpollaBE.csproj" />
+</Solution>
