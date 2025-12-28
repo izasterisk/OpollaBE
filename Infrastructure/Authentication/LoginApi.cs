@@ -5,17 +5,18 @@ namespace Infrastructure.Authentication;
 
 public class LoginApi : ILoginApi
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ApiHelper _apiHelper;
     private readonly string _loginUrl;
 
-    public LoginApi(IHttpClientFactory httpClientFactory)
+    public LoginApi(ApiHelper apiHelper)
     {
-        _httpClientFactory = httpClientFactory;
-        _loginUrl = Environment.GetEnvironmentVariable("LOGIN_URL") 
-            ?? throw new InvalidOperationException("LOGIN_URL not found in environment variables");
+        _apiHelper = apiHelper;
+        var baseUrl = Environment.GetEnvironmentVariable("URL") 
+            ?? throw new InvalidOperationException("URL not found in environment variables");
+        _loginUrl = $"{baseUrl.TrimEnd('/')}/auth/login";
     }
 
-    public async Task<object> LoginAsync(string username, string password)
+    public async Task<string> LoginAsync(string username, string password)
     {
         var formData = new Dictionary<string, string>
         {
@@ -23,16 +24,14 @@ public class LoginApi : ILoginApi
             { "password", password }
         };
 
-        using var httpClient = _httpClientFactory.CreateClient();
-        using var content = new FormUrlEncodedContent(formData);
-        var response = await httpClient.PostAsync(_loginUrl, content);
-        response.EnsureSuccessStatusCode();
-
-        var jsonString = await response.Content.ReadAsStringAsync();
-        using var jsonDoc = JsonDocument.Parse(jsonString);
+        var response = await _apiHelper.PostFormDataAsync<JsonElement>(_loginUrl, formData);
         
-        // Return the entire JSON response as object
-        return JsonSerializer.Deserialize<object>(jsonString) 
-            ?? throw new Exception("Login failed: Invalid response from server");
+        if (response.TryGetProperty("token", out var tokenElement))
+        {
+            return tokenElement.GetString() 
+                ?? throw new Exception("Token is null in response");
+        }
+        
+        throw new Exception("Login failed: Token not found in response");
     }
 }

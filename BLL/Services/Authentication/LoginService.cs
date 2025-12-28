@@ -6,14 +6,17 @@ namespace BLL.Services.Authentication;
 public class LoginService : ILoginService
 {
     private readonly ILoginApi  _loginApi;
-
-    public LoginService(ILoginApi loginApi)
+    private readonly IProfileApi _profileApi;
+    
+    public LoginService(ILoginApi loginApi, IProfileApi profileApi)
     {
         _loginApi = loginApi;
+        _profileApi = profileApi;
     }
 
     public async Task<object> LoginAsync(string username, string password)
     {
-        return await _loginApi.LoginAsync(username, password);
+        var token = await _loginApi.LoginAsync(username, password);
+        return await _profileApi.GetProfileAsync(token);
     }
 }

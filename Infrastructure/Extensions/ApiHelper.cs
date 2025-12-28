@@ -42,6 +42,17 @@ public class ApiHelper
         return await response.Content.ReadFromJsonAsync<T>(_jsonOptions);
     }
 
+    public async Task<T?> GetWithAuthAsync<T>(string url, string bearerToken)
+    {
+        using var httpClient = _httpClientFactory.CreateClient();
+        httpClient.DefaultRequestHeaders.Authorization = 
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", bearerToken);
+        
+        var response = await httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<T>(_jsonOptions);
+    }
+
     public async Task<T?> PutAsync<T>(string url, object body)
     {
         using var httpClient = _httpClientFactory.CreateClient();

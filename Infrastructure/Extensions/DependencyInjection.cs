@@ -14,6 +14,7 @@ public static class DependencyInjection
         // Register Infrastructure services
         services.AddScoped<ApiHelper>();
         services.AddScoped<ILoginApi, LoginApi>();
+        services.AddScoped<IProfileApi, ProfileApi>();
 
         return services;
     }
