@@ -16,6 +16,9 @@ builder.Services.AddInfrastructure();
 
 builder.Services.AddScoped<ILoginService, LoginService>();
 
+// Add Memory Cache
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
