@@ -185,3 +185,4 @@ __pycache__/
 # but sometimes appsettings.Development.json contains secrets
 appsettings.Development.json
 appsettings.local.json
+.env
