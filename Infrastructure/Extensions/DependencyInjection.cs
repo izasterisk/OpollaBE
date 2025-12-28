@@ -1,5 +1,6 @@
 using BLL.Interfaces.Infrastructure;
 using Infrastructure.Authentication;
+using Infrastructure.Classes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<ApiHelper>();
         services.AddScoped<ILoginApi, LoginApi>();
         services.AddScoped<IProfileApi, ProfileApi>();
+        services.AddScoped<IClassApi, ClassApi>();
 
         return services;
     }

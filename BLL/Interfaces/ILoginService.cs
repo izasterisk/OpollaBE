@@ -4,6 +4,6 @@ namespace BLL.Interfaces;
 
 public interface ILoginService
 {
-    Task<ProfileResponseDTO> LoginAsync(string username, string password);
+    Task<ProfileResponseDTO> LoginAsync(string username, string password, CancellationToken cancellationToken = default);
     Task LogoutAsync(string username);
 }

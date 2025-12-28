@@ -17,14 +17,14 @@ public class LoginController : BaseController
     }
 
     [HttpPost]
-    public async Task<ActionResult<APIResponse>> Login([FromBody] LoginRequestDTO request)
+    public async Task<ActionResult<APIResponse>> Login([FromBody] LoginRequestDTO request, CancellationToken cancellationToken = default)
     {
         try
         {
             var validationResult = ValidateModel();
             if (validationResult != null) return validationResult;
 
-            var profile = await _loginService.LoginAsync(request.Username, request.Password);
+            var profile = await _loginService.LoginAsync(request.Username, request.Password, cancellationToken);
             return SuccessResponse(profile);
         }
         catch (Exception ex)

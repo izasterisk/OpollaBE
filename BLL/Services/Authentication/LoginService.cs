@@ -18,7 +18,7 @@ public class LoginService : ILoginService
         _cache = cache;
     }
 
-    public async Task<ProfileResponseDTO> LoginAsync(string username, string password)
+    public async Task<ProfileResponseDTO> LoginAsync(string username, string password, CancellationToken cancellationToken = default)
     {
         string cacheKey = $"token_{username}";
         
@@ -26,7 +26,7 @@ public class LoginService : ILoginService
         {
             try
             {
-                var cachedProfile = await _profileApi.GetProfileAsync(cachedToken);
+                var cachedProfile = await _profileApi.GetProfileAsync(cachedToken, cancellationToken);
                 cachedProfile.Token = cachedToken;
                 return cachedProfile;
             }
@@ -40,14 +40,14 @@ public class LoginService : ILoginService
             }
         }
         
-        var token = await _loginApi.LoginAsync(username, password);
+        var token = await _loginApi.LoginAsync(username, password, cancellationToken);
         var cacheOptions = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
         };
         _cache.Set(cacheKey, token, cacheOptions);
         
-        var profile = await _profileApi.GetProfileAsync(token);
+        var profile = await _profileApi.GetProfileAsync(token, cancellationToken);
         profile.Token = token;
         return profile;
     }

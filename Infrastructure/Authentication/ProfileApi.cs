@@ -16,9 +16,9 @@ public class ProfileApi : IProfileApi
         _profileUrl = $"{baseUrl.TrimEnd('/')}/user/profile";
     }
     
-    public async Task<ProfileResponseDTO> GetProfileAsync(string token)
+    public async Task<ProfileResponseDTO> GetProfileAsync(string token, CancellationToken cancellationToken = default)
     {
-        return await _apiHelper.GetWithAuthAsync<ProfileResponseDTO>(_profileUrl, token) 
+        return await _apiHelper.GetWithAuthAsync<ProfileResponseDTO>(_profileUrl, token, cancellationToken) 
             ?? throw new Exception("Get profile failed: Invalid response from server");
     }
 }

@@ -16,7 +16,7 @@ public class LoginApi : ILoginApi
         _loginUrl = $"{baseUrl.TrimEnd('/')}/auth/login";
     }
 
-    public async Task<string> LoginAsync(string username, string password)
+    public async Task<string> LoginAsync(string username, string password, CancellationToken cancellationToken = default)
     {
         var formData = new Dictionary<string, string>
         {
@@ -24,7 +24,7 @@ public class LoginApi : ILoginApi
             { "password", password }
         };
 
-        var response = await _apiHelper.PostFormDataAsync<JsonElement>(_loginUrl, formData);
+        var response = await _apiHelper.PostFormDataAsync<JsonElement>(_loginUrl, formData, cancellationToken);
         
         if (response.TryGetProperty("token", out var tokenElement))
         {
