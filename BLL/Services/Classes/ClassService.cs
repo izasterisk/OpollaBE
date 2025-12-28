@@ -27,7 +27,7 @@ public class ClassService : IClassService
             }
         }
         
-        var filteredClasses = allClasses.Where(c => c.HomeLearningReport != null).ToList();
+        var filteredClasses = allClasses.Where(c => c.Report != null).ToList();
         var totalFiltered = filteredClasses.Count;
         var totalPages = (int)Math.Ceiling((double)totalFiltered / pageSize);
         
