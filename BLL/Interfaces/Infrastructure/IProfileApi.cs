@@ -1,6 +1,8 @@
+using BLL.DTOs.Authentication;
+
 namespace BLL.Interfaces.Infrastructure;
 
 public interface IProfileApi
 {
-    Task<object> GetProfileAsync(string token);
+    Task<ProfileResponseDTO> GetProfileAsync(string token);
 }

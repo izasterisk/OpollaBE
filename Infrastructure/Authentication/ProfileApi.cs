@@ -1,4 +1,5 @@
 ﻿using BLL.Interfaces.Infrastructure;
+using BLL.DTOs.Authentication;
 
 namespace Infrastructure.Authentication;
 
@@ -15,9 +16,9 @@ public class ProfileApi : IProfileApi
         _profileUrl = $"{baseUrl.TrimEnd('/')}/user/profile";
     }
     
-    public async Task<object> GetProfileAsync(string token)
+    public async Task<ProfileResponseDTO> GetProfileAsync(string token)
     {
-        return await _apiHelper.GetWithAuthAsync<object>(_profileUrl, token) 
+        return await _apiHelper.GetWithAuthAsync<ProfileResponseDTO>(_profileUrl, token) 
             ?? throw new Exception("Get profile failed: Invalid response from server");
     }
 }

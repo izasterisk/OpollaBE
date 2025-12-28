@@ -32,4 +32,21 @@ public class LoginController : BaseController
             return HandleException(ex);
         }
     }
+
+    [HttpPost("logout")]
+    public async Task<ActionResult<APIResponse>> Logout([FromBody] LogoutRequestDTO request)
+    {
+        try
+        {
+            var validationResult = ValidateModel();
+            if (validationResult != null) return validationResult;
+
+            await _loginService.LogoutAsync(request.Username);
+            return SuccessResponse(new { message = "Đăng xuất thành công" });
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex);
+        }
+    }
 }

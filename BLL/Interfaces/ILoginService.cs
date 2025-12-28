@@ -1,6 +1,9 @@
-﻿namespace BLL.Interfaces;
+﻿using BLL.DTOs.Authentication;
+
+namespace BLL.Interfaces;
 
 public interface ILoginService
 {
-    Task<object> LoginAsync(string username, string password);
+    Task<ProfileResponseDTO> LoginAsync(string username, string password);
+    Task LogoutAsync(string username);
 }

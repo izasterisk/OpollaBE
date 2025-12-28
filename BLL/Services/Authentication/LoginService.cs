@@ -1,5 +1,6 @@
 ﻿using BLL.Interfaces;
 using BLL.Interfaces.Infrastructure;
+using BLL.DTOs.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BLL.Services.Authentication;
@@ -17,7 +18,7 @@ public class LoginService : ILoginService
         _cache = cache;
     }
 
-    public async Task<object> LoginAsync(string username, string password)
+    public async Task<ProfileResponseDTO> LoginAsync(string username, string password)
     {
         string cacheKey = $"token_{username}";
         
@@ -25,7 +26,9 @@ public class LoginService : ILoginService
         {
             try
             {
-                return await _profileApi.GetProfileAsync(cachedToken);
+                var cachedProfile = await _profileApi.GetProfileAsync(cachedToken);
+                cachedProfile.Token = cachedToken;
+                return cachedProfile;
             }
             catch (HttpRequestException)
             {
@@ -43,6 +46,16 @@ public class LoginService : ILoginService
             AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
         };
         _cache.Set(cacheKey, token, cacheOptions);
-        return await _profileApi.GetProfileAsync(token);
+        
+        var profile = await _profileApi.GetProfileAsync(token);
+        profile.Token = token;
+        return profile;
+    }
+
+    public Task LogoutAsync(string username)
+    {
+        var cacheKey = $"token_{username}";
+        _cache.Remove(cacheKey);
+        return Task.CompletedTask;
     }
 }
