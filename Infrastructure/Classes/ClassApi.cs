@@ -17,20 +17,20 @@ public class ClassApi : IClassApi
 
     public async Task<ClassPagingResponseDTO> GetClassListAsync(
         string token, 
-        int centerId, 
+        string centerId = "all",
         int page = 1, 
         int pageSize = 10, 
-        string sortBy = "DESC", 
-        bool isDesc = true, 
-        bool showReport = true,
+        string sortBy = "id", 
+        string orderBy = "DESC", 
+        bool isShowReport = true,
         CancellationToken cancellationToken = default)
     {
-        var queryParams = $"page={page}&pageSize={pageSize}&sortBy={sortBy}&isDesc={isDesc}&showReport={showReport}";
-        var url = $"{_baseUrl.TrimEnd('/')}/api/management/class?{queryParams}";
+        var queryParams = $"page={page}&pageSize={pageSize}&sortBy={sortBy}&orderBy={orderBy}&isShowReport={isShowReport.ToString().ToLower()}";
+        var url = $"{_baseUrl.TrimEnd('/')}/management/class?{queryParams}";
         
         var headers = new Dictionary<string, string>
         {
-            { "Center-Id", centerId.ToString() }
+            { "Center-Id", centerId }
         };
 
         return await _apiHelper.GetWithAuthAndHeadersAsync<ClassPagingResponseDTO>(url, token, headers, cancellationToken)

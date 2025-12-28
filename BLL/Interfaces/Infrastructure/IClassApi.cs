@@ -6,11 +6,11 @@ public interface IClassApi
 {
     Task<ClassPagingResponseDTO> GetClassListAsync(
         string token, 
-        int centerId, 
+        string centerId = "all",
         int page = 1, 
         int pageSize = 10, 
-        string sortBy = "DESC", 
-        bool isDesc = true, 
-        bool showReport = true,
+        string sortBy = "id", 
+        string orderBy = "DESC", 
+        bool isShowReport = true,
         CancellationToken cancellationToken = default);
 }
