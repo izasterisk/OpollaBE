@@ -3,7 +3,7 @@ using BLL.Interfaces.Infrastructure;
 using BLL.DTOs.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace BLL.Services.Authentication;
+namespace BLL.Services;
 
 public class LoginService : ILoginService
 {

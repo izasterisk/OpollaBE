@@ -1,6 +1,5 @@
 using BLL.Interfaces;
-using BLL.Services.Authentication;
-using BLL.Services.Classes;
+using BLL.Services;
 using BLL.Helper;
 using Infrastructure;
 using DotNetEnv;
@@ -16,9 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Infrastructure services
 builder.Services.AddInfrastructure();
 
+builder.Services.AddScoped<TokenHelper>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IClassService, ClassService>();
-builder.Services.AddScoped<TokenHelper>();
+builder.Services.AddScoped<IStudentService, StudentService>();
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();

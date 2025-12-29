@@ -2,7 +2,7 @@
 using BLL.Interfaces;
 using BLL.Interfaces.Infrastructure;
 
-namespace BLL.Services.Classes;
+namespace BLL.Services;
 
 public class ClassService : IClassService
 {

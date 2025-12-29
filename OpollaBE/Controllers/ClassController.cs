@@ -18,7 +18,7 @@ public class ClassController : BaseController
 
     [HttpPost]
     public async Task<ActionResult<APIResponse>> GetClasses(
-        [FromBody] ClassRequestDTO request,
+        [FromBody] TokenRequestDTO request,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
