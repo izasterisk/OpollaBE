@@ -43,4 +43,33 @@ public class StudentApi : IStudentApi
         return await _apiHelper.GetWithAuthAndHeadersAsync<StudentPagingResponseDTO>(url, token, headers, cancellationToken)
             ?? throw new Exception("Get student list failed: Invalid response from server");
     }
+
+    public async Task<HomeLearningPagingResponseDTO> GetStudentHomeLearningAsync(
+        string token,
+        int studentId,
+        string centerId = "all",
+        int page = 1,
+        int pageSize = 10,
+        string? classIds = null,
+        string detail = "APP",
+        string orderBy = "DESC",
+        CancellationToken cancellationToken = default)
+    {
+        var queryParams = $"page={page}&pageSize={pageSize}&detail={detail}&orderBy={orderBy}";
+        
+        if (!string.IsNullOrEmpty(classIds))
+        {
+            queryParams += $"&classIds={classIds}";
+        }
+        
+        var url = $"{_baseUrl.TrimEnd('/')}/management/student/{studentId}/home-learning?{queryParams}";
+        
+        var headers = new Dictionary<string, string>
+        {
+            { "Center-Id", centerId }
+        };
+
+        return await _apiHelper.GetWithAuthAndHeadersAsync<HomeLearningPagingResponseDTO>(url, token, headers, cancellationToken)
+            ?? throw new Exception("Get student home learning failed: Invalid response from server");
+    }
 }

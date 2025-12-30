@@ -14,4 +14,15 @@ public interface IStudentApi
         bool isShowReport = true,
         string? classIds = null,
         CancellationToken cancellationToken = default);
+
+    Task<HomeLearningPagingResponseDTO> GetStudentHomeLearningAsync(
+        string token,
+        int studentId,
+        string centerId = "all",
+        int page = 1,
+        int pageSize = 10,
+        string? classIds = null,
+        string detail = "APP",
+        string orderBy = "DESC",
+        CancellationToken cancellationToken = default);
 }

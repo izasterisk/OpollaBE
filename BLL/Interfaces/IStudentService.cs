@@ -9,5 +9,11 @@ public interface IStudentService
         int page = 1, 
         int pageSize = 10,
         CancellationToken cancellationToken = default);
+    
+    Task<HomeLearningPagingResponseDTO> GetStudentsProgressByClassAsync(
+        HomeLearningRequestDTO dto, 
+        int page = 1, 
+        int pageSize = 10, 
+        CancellationToken cancellationToken = default);
 }
 

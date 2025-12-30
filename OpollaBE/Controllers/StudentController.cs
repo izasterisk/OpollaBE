@@ -36,4 +36,25 @@ public class StudentController : BaseController
             return HandleException(ex);
         }
     }
+
+    [HttpPost("progress")]
+    public async Task<ActionResult<APIResponse>> GetStudentsProgress(
+        [FromBody] HomeLearningRequestDTO request,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var validationResult = ValidateModel();
+            if (validationResult != null) return validationResult;
+
+            var progress = await _studentService.GetStudentsProgressByClassAsync(request, page, pageSize, cancellationToken);
+            return SuccessResponse(progress);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex);
+        }
+    }
 }
