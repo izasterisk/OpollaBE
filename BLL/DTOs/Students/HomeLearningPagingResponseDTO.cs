@@ -14,6 +14,7 @@ public class HomeLearningDTO
     public int Id { get; set; }
     public int StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty; // Endpoint POST /api/Student this field will be null
+    public string StudentAvatar { get; set; } = string.Empty; // Endpoint POST /api/Student this field will be null
     public int ClassId { get; set; }
     public DateTime AssignDate { get; set; }
     public int CmsResourceId { get; set; }

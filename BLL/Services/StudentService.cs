@@ -57,6 +57,8 @@ public class StudentService : IStudentService
                         if (matchingRecord != null)
                         {
                             matchingRecord.StudentName = student.Name;
+                            if(student.Avatar != null)
+                                matchingRecord.StudentAvatar = student.Avatar.Url;
                             learningProgress.Add(matchingRecord);
                         }
                             
@@ -85,6 +87,8 @@ public class StudentService : IStudentService
                         if (matchingRecord != null)
                         {
                             matchingRecord.StudentName = student.Name;
+                            if(student.Avatar != null)
+                                matchingRecord.StudentAvatar = student.Avatar.Url;
                             learningProgress.Add(matchingRecord);
                         }
                     }
