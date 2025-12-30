@@ -86,7 +86,7 @@ public class StudentReportDTO
     public double? WorkbookCompletion { get; set; }
     public double? WorkbookScore { get; set; }
     public int APO { get; set; }
-    public string? LearningObjective { get; set; }
+    public double? LearningObjective { get; set; }
     public int TotalSession { get; set; }
 }
 

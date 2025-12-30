@@ -10,10 +10,12 @@ namespace OpollaBE.Controllers;
 public class StudentController : BaseController
 {
     private readonly IStudentService _studentService;
+    private readonly ILogger<StudentController> _logger;
 
-    public StudentController(IStudentService studentService)
+    public StudentController(IStudentService studentService, ILogger<StudentController> logger)
     {
         _studentService = studentService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -33,6 +35,7 @@ public class StudentController : BaseController
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error in GetStudents: {Message}", ex.Message);
             return HandleException(ex);
         }
     }
@@ -54,6 +57,7 @@ public class StudentController : BaseController
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error in GetStudentsProgress: {Message}", ex.Message);
             return HandleException(ex);
         }
     }
