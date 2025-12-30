@@ -60,7 +60,7 @@ public class BuiltAvatarDTO
     public int StudentId { get; set; }
     public int ImageId { get; set; }
     public int? AccessoryId { get; set; }
-    public int BaseId { get; set; }
+    public int? BaseId { get; set; }
     public DateTime NextUseAt { get; set; }
 }
 
@@ -75,7 +75,7 @@ public class AvatarImageDTO
     public bool IsAPOFeedbackIcon { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public int CreatorId { get; set; }
+    public int? CreatorId { get; set; }
     public int? GalleryId { get; set; }
     public int? AvatarBaseId { get; set; }
 }

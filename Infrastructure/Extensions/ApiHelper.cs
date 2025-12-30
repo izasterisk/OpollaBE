@@ -85,6 +85,15 @@ public class ApiHelper
         
         var response = await httpClient.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken);
+        
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken);
+        }
+        catch (JsonException ex)
+        {
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new InvalidOperationException($"Failed to deserialize response from {url}. Content: {content}", ex);
+        }
     }
 }
