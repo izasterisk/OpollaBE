@@ -5,8 +5,17 @@ using Infrastructure;
 using DotNetEnv;
 
 // Load .env file
-var envPath = File.Exists(".env") ? ".env" : throw new FileNotFoundException(".env file not found");
-Env.Load(envPath);
+try
+{
+    var envPath = File.Exists("OpollaBE/.env") ? "OpollaBE/.env" :
+        File.Exists(".env") ? ".env" :
+        throw new FileNotFoundException(".env file not found");
+    Env.Load(envPath);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Warning: Could not load .env file: {ex.Message}. Using environment variables.");
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
