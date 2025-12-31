@@ -51,9 +51,9 @@ public class ClassReportDTO
 public class HomeLearningReportDTO
 {
     public int Id { get; set; }
-    public double AppCompletion { get; set; }
-    public double AppScore { get; set; }
-    public long AppTime { get; set; }
+    public double? AppCompletion { get; set; }
+    public double? AppScore { get; set; }
+    public long? AppTime { get; set; }
     public int TotalHomeLearning { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
