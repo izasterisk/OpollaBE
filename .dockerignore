@@ -1,0 +1,49 @@
+# Build artifacts
+**/bin
+**/obj
+**/out
+
+# IDE and editor files
+**/.vs
+**/.vscode
+**/.idea
+**/.classpath
+**/.project
+**/.settings
+**/*.*proj.user
+**/*.dbmdl
+**/*.jfm
+
+# Git files (keep essential git info)
+**/.git
+!.git/HEAD
+!.git/config
+!.git/packed-refs
+!.git/refs/heads/**
+
+# Environment and config files
+**/.env
+**/appsettings.Development.json
+
+# Docker files
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+
+# Node.js (if any)
+**/node_modules
+**/npm-debug.log
+
+# Documentation
+README.md
+LICENSE
+
+# Development tools
+**/charts
+**/azds.yaml
+**/secrets.dev.yaml
+**/values.dev.yaml
+**/.toolstarget
+
+# Keep important files
+!**/.gitignore
