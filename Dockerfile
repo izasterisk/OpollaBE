@@ -1,5 +1,5 @@
 # Multi-stage build for optimized production deployment
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project files in dependency order for better caching
@@ -18,7 +18,7 @@ WORKDIR "/src/OpollaBE"
 RUN dotnet publish "OpollaBE.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Final production image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # Copy published application
