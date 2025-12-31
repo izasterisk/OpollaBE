@@ -85,7 +85,7 @@ public class StudentReportDTO
     public double? Attendance { get; set; }
     public double? WorkbookCompletion { get; set; }
     public double? WorkbookScore { get; set; }
-    public int APO { get; set; }
+    public int? APO { get; set; }
     public double? LearningObjective { get; set; }
     public int TotalSession { get; set; }
 }
@@ -94,6 +94,6 @@ public class HomeLearningReportDTO
 {
     public double? AppCompletion { get; set; }
     public double? AppScore { get; set; }
-    public int? AppTime { get; set; }
+    public long? AppTime { get; set; }
     public int TotalHomeLearning { get; set; }
 }
