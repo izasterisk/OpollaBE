@@ -4,17 +4,25 @@ using BLL.Helper;
 using Infrastructure;
 using DotNetEnv;
 
-// Load .env file
+// Load .env file if exists (for local development)
 try
 {
     var envPath = File.Exists("OpollaBE/.env") ? "OpollaBE/.env" :
-        File.Exists(".env") ? ".env" :
-        throw new FileNotFoundException(".env file not found");
-    Env.Load(envPath);
+        File.Exists(".env") ? ".env" : null;
+    
+    if (envPath != null)
+    {
+        Env.Load(envPath);
+        Console.WriteLine($".env file loaded from: {envPath}");
+    }
+    else
+    {
+        Console.WriteLine("No .env file found. Using environment variables from host.");
+    }
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Warning: Could not load .env file: {ex.Message}. Using environment variables.");
+    Console.WriteLine($"Warning: Could not load .env file: {ex.Message}. Using environment variables from host.");
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,15 +58,13 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments (including Production for Azure)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "OpollaBE API V1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at root (http://localhost:5000/)
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "OpollaBE API V1");
+    c.RoutePrefix = "swagger"; // Access via /swagger
+});
 
 app.UseHttpsRedirection();
 
