@@ -1,6 +1,7 @@
 using BLL.Interfaces.Infrastructure;
 using Infrastructure.Authentication;
 using Infrastructure.Classes;
+using Infrastructure.GoogleSheet;
 using Infrastructure.Students;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IProfileApi, ProfileApi>();
         services.AddScoped<IClassApi, ClassApi>();
         services.AddScoped<IStudentApi, StudentApi>();
+        services.AddScoped<IGoogleSheetsApi, GoogleSheetsApi>();
 
         return services;
     }

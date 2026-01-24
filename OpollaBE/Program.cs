@@ -36,6 +36,7 @@ builder.Services.AddScoped<TokenHelper>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IGoogleSheetsSyncService, GoogleSheetsSyncService>();
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();
