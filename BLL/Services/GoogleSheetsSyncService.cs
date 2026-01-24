@@ -115,6 +115,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         if (value == null)
             return "0%";
         
-        return $"{value:F2}%".Replace(".", ","); // Format như trong sheet (dùng dấu phẩy)
+        return $"{value:F2}%"; // Format: 81.00%
     }
 }
