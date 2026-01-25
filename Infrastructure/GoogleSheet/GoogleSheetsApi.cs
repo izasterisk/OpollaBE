@@ -305,6 +305,37 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                 await _sheetsService.Spreadsheets.BatchUpdate(batchMergeRequest, spreadsheetId)
                     .ExecuteAsync(cancellationToken);
             }
+
+            // 5. Add thick outer border around each class group
+            var borderRequests = new List<Request>();
+            foreach (var (startRow, endRow) in classMergeRanges)
+            {
+                borderRequests.Add(new Request
+                {
+                    UpdateBorders = new UpdateBordersRequest
+                    {
+                        Range = new GridRange
+                        {
+                            SheetId = sheetId,
+                            StartRowIndex = startRow,
+                            EndRowIndex = endRow + 1,
+                            StartColumnIndex = 0, // Column A
+                            EndColumnIndex = 5    // Column E (exclusive)
+                        },
+                        Top = new Border { Style = "SOLID_THICK", Color = BlackColor },
+                        Bottom = new Border { Style = "SOLID_THICK", Color = BlackColor },
+                        Left = new Border { Style = "SOLID_THICK", Color = BlackColor },
+                        Right = new Border { Style = "SOLID_THICK", Color = BlackColor }
+                    }
+                });
+            }
+
+            if (borderRequests.Count > 0)
+            {
+                var batchBorderRequest = new BatchUpdateSpreadsheetRequest { Requests = borderRequests };
+                await _sheetsService.Spreadsheets.BatchUpdate(batchBorderRequest, spreadsheetId)
+                    .ExecuteAsync(cancellationToken);
+            }
         }
     }
 

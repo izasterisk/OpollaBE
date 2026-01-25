@@ -4,8 +4,7 @@ namespace BLL.DTOs.GoogleSheets;
 
 public class GoogleSheetsSyncRequestDTO
 {
-    [Required(ErrorMessage = "Token is required")]
-    public string Token { get; set; } = string.Empty;
+    public string? Token { get; set; } = string.Empty;
 }
 
 public class GoogleSheetsSyncResponseDTO

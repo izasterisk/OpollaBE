@@ -11,21 +11,39 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
     private readonly IClassService _classService;
     private readonly IStudentService _studentService;
     private readonly IGoogleSheetsApi _googleSheetsApi;
+    private readonly ILoginService _loginService;
+    private readonly string email;
+    private readonly string password;
 
-    public GoogleSheetsSyncService(
-        IClassService classService,
-        IStudentService studentService,
-        IGoogleSheetsApi googleSheetsApi)
+    public GoogleSheetsSyncService(IClassService classService, IStudentService studentService,
+        IGoogleSheetsApi googleSheetsApi, ILoginService loginService)
     {
         _classService = classService;
         _studentService = studentService;
         _googleSheetsApi = googleSheetsApi;
+        _loginService = loginService;
+        
+        email = Environment.GetEnvironmentVariable("EMAIL")
+                        ?? throw new InvalidOperationException("EMAIL not found in environment variables");
+        password = Environment.GetEnvironmentVariable("PASSWORD")
+                    ?? throw new InvalidOperationException("PASSWORD not found in environment variables");
     }
 
     public async Task<GoogleSheetsSyncResponseDTO> SyncStudentDataToSheetAsync(
         GoogleSheetsSyncRequestDTO request,
         CancellationToken cancellationToken = default)
     {
+        string token;
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            var res = await _loginService.LoginAsync(email, password, cancellationToken);
+            token = res.Token;
+        }
+        else
+        {
+            token = request.Token;
+        }
+        
         // Get spreadsheet config from environment
         var spreadsheetId = Environment.GetEnvironmentVariable("GOOGLE_SHEET")
             ?? throw new InvalidOperationException("GOOGLE_SHEET not found in environment variables");
@@ -33,7 +51,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         const string sheetName = "Low ATLS Completion";
 
         // 1. Get all classes (use large pageSize to get all)
-        var classesResult = await _classService.GetAllClassesAsync(request.Token, page: 1, pageSize: 1000, cancellationToken);
+        var classesResult = await _classService.GetAllClassesAsync(token, page: 1, pageSize: 1000, cancellationToken);
         var allClasses = classesResult.Data;
 
         // 2. Build data for sheet
@@ -47,7 +65,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         {
             // Get students for this class (use large pageSize to get all)
             var studentsResult = await _studentService.GetAllStudentsAsync(
-                new StudentRequestDTO { Token = request.Token, ClassId = classItem.Id.ToString() },
+                new StudentRequestDTO { Token = token, ClassId = classItem.Id.ToString() },
                 page: 1,
                 pageSize: 1000,
                 cancellationToken);
