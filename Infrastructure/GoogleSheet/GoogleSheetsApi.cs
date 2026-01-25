@@ -40,6 +40,7 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         string sheetName,
         IList<IList<object>> data,
         List<(int startRow, int endRow)> classMergeRanges,
+        DateTime updatedAt,
         CancellationToken cancellationToken = default)
     {
         // Get sheet ID from sheet name
@@ -216,11 +217,9 @@ public class GoogleSheetsApi : IGoogleSheetsApi
             await _sheetsService.Spreadsheets.BatchUpdate(batchFormatRequest, spreadsheetId)
                 .ExecuteAsync(cancellationToken);
 
-            // Update "Last updated at" timestamp (H2: date, H3: time) in Vietnam timezone
-            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // UTC+7
-            var vietnamNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
-            var dateStr = vietnamNow.ToString("dd/MM/yyyy");
-            var timeStr = vietnamNow.ToString("HH:mm:ss");
+            // Update "Last updated at" timestamp (H2: date, H3: time)
+            var dateStr = updatedAt.ToString("dd/MM/yyyy");
+            var timeStr = updatedAt.ToString("HH:mm:ss");
 
             var timestampRange = $"{sheetName}!H2:H3";
             var timestampValues = new ValueRange

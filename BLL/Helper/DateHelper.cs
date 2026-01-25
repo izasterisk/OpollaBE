@@ -52,4 +52,14 @@ public class DateHelper
         
         return pageNumber;
     }
+
+    /// <summary>
+    /// Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
+    /// </summary>
+    /// <returns>DateTime theo múi giờ Việt Nam</returns>
+    public static DateTime GetVietnamNow()
+    {
+        var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // UTC+7
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
+    }
 }

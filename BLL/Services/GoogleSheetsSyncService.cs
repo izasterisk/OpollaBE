@@ -1,5 +1,6 @@
 using BLL.DTOs.GoogleSheets;
 using BLL.DTOs.Students;
+using BLL.Helper;
 using BLL.Interfaces;
 using BLL.Interfaces.Infrastructure;
 
@@ -97,11 +98,13 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         }
 
         // 3. Sync to Google Sheets
+        var updatedAt = DateHelper.GetVietnamNow();
         await _googleSheetsApi.SyncStudentDataAsync(
             spreadsheetId,
             sheetName,
             sheetData,
             classMergeRanges,
+            updatedAt,
             cancellationToken);
 
         return new GoogleSheetsSyncResponseDTO
