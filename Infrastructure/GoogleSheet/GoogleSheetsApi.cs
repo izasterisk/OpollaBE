@@ -11,9 +11,9 @@ public class GoogleSheetsApi : IGoogleSheetsApi
     private readonly SheetsService _sheetsService;
 
     // Colors for conditional formatting
-    private static readonly Color RedColor = new() { Red = 0.92f, Green = 0.35f, Blue = 0.35f }; // Darker red
-    private static readonly Color YellowColor = new() { Red = 1f, Green = 0.85f, Blue = 0.2f }; // Darker yellow
-    private static readonly Color GreenColor = new() { Red = 0.3f, Green = 0.8f, Blue = 0.3f }; // Darker green
+    private static readonly Color RedColor = new() { Red = 0.878f, Green = 0.4f, Blue = 0.4f }; // #e06666
+    private static readonly Color YellowColor = new() { Red = 1f, Green = 0.898f, Blue = 0.6f }; // #ffe599
+    private static readonly Color GreenColor = new() { Red = 0.576f, Green = 0.769f, Blue = 0.49f }; // #93c47d
     private static readonly Color BlackColor = new() { Red = 0f, Green = 0f, Blue = 0f }; // Black for borders
 
     public GoogleSheetsApi()
@@ -51,7 +51,7 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         // Build batch update request
         var requests = new List<Request>();
 
-        // 1. Clear all data from A2:D (keep header row 1)
+        // 1. Clear all data from A2:E (keep header row 1)
         requests.Add(new Request
         {
             UpdateCells = new UpdateCellsRequest
@@ -61,13 +61,13 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                     SheetId = sheetId,
                     StartRowIndex = 1, // Row 2 (0-indexed)
                     StartColumnIndex = 0, // Column A
-                    EndColumnIndex = 4 // Column D (exclusive)
+                    EndColumnIndex = 5 // Column E (exclusive)
                 },
                 Fields = "userEnteredValue,userEnteredFormat"
             }
         });
 
-        // 2. Unmerge all cells in columns A and B (from row 2 onwards)
+        // 2. Unmerge all cells in columns A, B, and E (from row 2 onwards)
         requests.Add(new Request
         {
             UnmergeCells = new UnmergeCellsRequest
@@ -78,6 +78,20 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                     StartRowIndex = 1,
                     StartColumnIndex = 0,
                     EndColumnIndex = 2 // Columns A and B
+                }
+            }
+        });
+
+        requests.Add(new Request
+        {
+            UnmergeCells = new UnmergeCellsRequest
+            {
+                Range = new GridRange
+                {
+                    SheetId = sheetId,
+                    StartRowIndex = 1,
+                    StartColumnIndex = 4,
+                    EndColumnIndex = 5 // Column E
                 }
             }
         });
@@ -95,9 +109,9 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         {
             var formatRequests = new List<Request>();
             
-            // Set column widths (A=157, B=157, C=300, D=157)
-            var columnWidths = new[] { 157, 157, 300, 157 };
-            for (var col = 0; col < 4; col++)
+            // Set column widths (A=157, B=157, C=300, D=157, E=157)
+            var columnWidths = new[] { 157, 157, 300, 157, 157 };
+            for (var col = 0; col < 5; col++)
             {
                 formatRequests.Add(new Request
                 {
@@ -156,12 +170,18 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                                 Right = new Border { Style = "SOLID", Color = BlackColor }
                             },
                             VerticalAlignment = "MIDDLE",
-                            HorizontalAlignment = "CENTER"
+                            HorizontalAlignment = "CENTER",
+                            TextFormat = new TextFormat
+                            {
+                                FontFamily = "Calibri",
+                                FontSize = 12,
+                                Bold = j == 0 // Bold for column A (Class name)
+                            }
                         }
                     };
 
-                    // Apply color based on App Completion (columns B and D)
-                    if (j == 1 || j == 3) // Column B (Class App Completion) or D (Student App Completion)
+                    // Apply color based on App Completion (columns B, D, and E)
+                    if (j == 1 || j == 3 || j == 4) // Column B (Class App Completion), D (Student App Completion), or E (Workbook Completion)
                     {
                         var color = GetColorForPercentage(cellValue);
                         cellData.UserEnteredFormat.BackgroundColor = color;
@@ -184,7 +204,7 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                         StartRowIndex = 1,
                         StartColumnIndex = 0,
                         EndRowIndex = data.Count + 1,
-                        EndColumnIndex = 4
+                        EndColumnIndex = 5
                     },
                     Rows = rows,
                     Fields = "userEnteredValue,userEnteredFormat"
@@ -195,9 +215,29 @@ public class GoogleSheetsApi : IGoogleSheetsApi
             var batchFormatRequest = new BatchUpdateSpreadsheetRequest { Requests = formatRequests };
             await _sheetsService.Spreadsheets.BatchUpdate(batchFormatRequest, spreadsheetId)
                 .ExecuteAsync(cancellationToken);
+
+            // Update "Last updated at" timestamp (H2: date, H3: time) in Vietnam timezone
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // UTC+7
+            var vietnamNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
+            var dateStr = vietnamNow.ToString("dd/MM/yyyy");
+            var timeStr = vietnamNow.ToString("HH:mm:ss");
+
+            var timestampRange = $"{sheetName}!H2:H3";
+            var timestampValues = new ValueRange
+            {
+                Values = new List<IList<object>>
+                {
+                    new List<object> { dateStr },
+                    new List<object> { timeStr }
+                }
+            };
+
+            var timestampRequest = _sheetsService.Spreadsheets.Values.Update(timestampValues, spreadsheetId, timestampRange);
+            timestampRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            await timestampRequest.ExecuteAsync(cancellationToken);
         }
 
-        // 4. Merge cells for class columns (A and B)
+        // 4. Merge cells for class columns (A, B, and E)
         if (classMergeRanges.Count > 0)
         {
             var mergeRequests = new List<Request>();
@@ -236,6 +276,23 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                                 EndRowIndex = endRow + 1,
                                 StartColumnIndex = 1, // Column B
                                 EndColumnIndex = 2
+                            },
+                            MergeType = "MERGE_ALL"
+                        }
+                    });
+
+                    // Merge column E (Workbook Completion)
+                    mergeRequests.Add(new Request
+                    {
+                        MergeCells = new MergeCellsRequest
+                        {
+                            Range = new GridRange
+                            {
+                                SheetId = sheetId,
+                                StartRowIndex = startRow,
+                                EndRowIndex = endRow + 1,
+                                StartColumnIndex = 4, // Column E
+                                EndColumnIndex = 5
                             },
                             MergeType = "MERGE_ALL"
                         }

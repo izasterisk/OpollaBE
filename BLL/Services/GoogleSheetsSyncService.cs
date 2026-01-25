@@ -59,6 +59,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             var classStartRow = currentRow;
             var classAppCompletion = classItem.HomeLearningReport?.AppCompletion;
             var classAppCompletionStr = FormatPercentage(classAppCompletion);
+            var workbookCompletion = classItem.Report?.WorkbookCompletion;
+            var workbookCompletionStr = FormatPercentage(workbookCompletion);
 
             foreach (var student in students)
             {
@@ -70,7 +72,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     classItem.Name,           // Column A: Class name
                     classAppCompletionStr,    // Column B: Class App Completion
                     student.Name,             // Column C: Student name
-                    studentAppCompletionStr   // Column D: Student App Completion
+                    studentAppCompletionStr,  // Column D: Student App Completion
+                    workbookCompletionStr     // Column E: Workbook Completion
                 });
 
                 currentRow++;
@@ -115,6 +118,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         if (value == null)
             return "0%";
         
-        return $"{value:F2}%"; // Format: 81.00%
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2}%", value); // Format: 81.00%
     }
 }

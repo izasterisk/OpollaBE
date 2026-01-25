@@ -23,9 +23,9 @@ public class GoogleSheetsSyncController : BaseController
     /// <summary>
     /// Sync student data (Class, ClassAppCompletion, StudentName, StudentAppCompletion) to Google Sheets
     /// </summary>
-    /// <param name="request">Request containing token and optional spreadsheet config</param>
+    /// <param name="request">Request containing token</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Sync summary including total classes and students synced</returns>
+    /// <returns>Success message</returns>
     [HttpPost]
     public async Task<ActionResult<APIResponse>> SyncToGoogleSheets(
         [FromBody] GoogleSheetsSyncRequestDTO request,
@@ -38,12 +38,11 @@ public class GoogleSheetsSyncController : BaseController
 
             _logger.LogInformation("Starting Google Sheets sync...");
             
-            var result = await _syncService.SyncStudentDataToSheetAsync(request, cancellationToken);
+            await _syncService.SyncStudentDataToSheetAsync(request, cancellationToken);
             
-            _logger.LogInformation("Google Sheets sync completed: {TotalClasses} classes, {TotalStudents} students",
-                result.TotalClasses, result.TotalStudents);
+            _logger.LogInformation("Google Sheets sync completed");
 
-            return SuccessResponse(result);
+            return SuccessResponse("Cập nhật thành công");
         }
         catch (Exception ex)
         {
