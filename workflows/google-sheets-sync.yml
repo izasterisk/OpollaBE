@@ -1,0 +1,61 @@
+name: Google Sheets Sync
+
+on:
+  schedule:
+    # Runs at 1:00 AM Vietnam time (6:00 PM UTC) every day
+    - cron: '0 18 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Sync Student Data to Google Sheets
+        run: |
+          response=$(curl -X POST \
+            'https://opollabe.onrender.com/api/GoogleSheetsSync' \
+            -H 'Content-Type: application/json' \
+            -d '{}' \
+            --max-time 90 \
+            -w "\n%{http_code}" \
+            -s)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Sync successful"
+            echo "$body"
+            exit 0
+          else
+            echo "❌ Sync failed with status code: $http_code"
+            echo "$body"
+            exit 1
+          fi
+
+      - name: Retry on Failure
+        if: failure()
+        run: |
+          echo "🔄 Retrying..."
+          sleep 5
+          
+          response=$(curl -X POST \
+            'https://opollabe.onrender.com/api/GoogleSheetsSync' \
+            -H 'Content-Type: application/json' \
+            -d '{}' \
+            --max-time 90 \
+            -w "\n%{http_code}" \
+            -s)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Retry successful"
+            echo "$body"
+            exit 0
+          else
+            echo "❌ Retry failed with status code: $http_code"
+            echo "$body"
+            exit 1
+          fi
