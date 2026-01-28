@@ -2,8 +2,10 @@ name: Google Sheets Sync
 
 on:
   schedule:
-    # Runs at 1:00 AM Vietnam time (6:00 PM UTC) every day
+    # Chạy vào lúc 1:00 AM giờ Việt Nam (18:00 UTC) mỗi ngày
     - cron: '0 18 * * *'
+  # Thêm nút bấm chạy thủ công trên giao diện GitHub
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -37,7 +39,7 @@ jobs:
         if: failure()
         run: |
           echo "🔄 Retrying..."
-          sleep 5
+          sleep 10
           
           response=$(curl -X POST \
             'https://opollabe.onrender.com/api/GoogleSheetsSync' \
