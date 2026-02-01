@@ -1,5 +1,7 @@
 using BLL.Interfaces.Infrastructure;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
@@ -18,15 +20,20 @@ public class GoogleSheetsApi : IGoogleSheetsApi
 
     public GoogleSheetsApi()
     {
-        var base64Key = Environment.GetEnvironmentVariable("GOOGLE_SHEET_API_KEY_BASE64")
-            ?? throw new InvalidOperationException("GOOGLE_SHEET_API_KEY_BASE64 not found in environment variables");
-        
-        var jsonKey = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64Key));
+        var clientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+            ?? throw new InvalidOperationException("GOOGLE_CLIENT_ID not found in environment variables");
+        var clientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
+            ?? throw new InvalidOperationException("GOOGLE_CLIENT_SECRET not found in environment variables");
+        var refreshToken = Environment.GetEnvironmentVariable("GOOGLE_REFRESH_TOKEN")
+            ?? throw new InvalidOperationException("GOOGLE_REFRESH_TOKEN not found in environment variables");
 
-        #pragma warning disable CS0618 // Type or member is obsolete
-        var credential = GoogleCredential.FromJson(jsonKey)
-            .CreateScoped(SheetsService.Scope.Spreadsheets);
-        #pragma warning restore CS0618
+        var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+        {
+            ClientSecrets = new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret }
+        });
+
+        var tokenResponse = new TokenResponse { RefreshToken = refreshToken };
+        var credential = new UserCredential(flow, "user", tokenResponse);
 
         _sheetsService = new SheetsService(new BaseClientService.Initializer
         {

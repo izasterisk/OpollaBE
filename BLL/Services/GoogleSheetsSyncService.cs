@@ -14,6 +14,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
     private readonly ILoginService _loginService;
     private readonly string email;
     private readonly string password;
+    private readonly string spreadsheetId;
 
     public GoogleSheetsSyncService(IClassService classService, IStudentService studentService,
         IGoogleSheetsApi googleSheetsApi, ILoginService loginService)
@@ -27,6 +28,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                         ?? throw new InvalidOperationException("EMAIL not found in environment variables");
         password = Environment.GetEnvironmentVariable("PASSWORD")
                     ?? throw new InvalidOperationException("PASSWORD not found in environment variables");
+        spreadsheetId = Environment.GetEnvironmentVariable("GOOGLE_SHEET_EDIT")
+                            ?? throw new InvalidOperationException("GOOGLE_SHEET_EDIT not found in environment variables");
     }
 
     public async Task<GoogleSheetsSyncResponseDTO> SyncStudentDataToSheetAsync(
@@ -43,10 +46,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         {
             token = request.Token;
         }
-        
-        // Get spreadsheet config from environment
-        var spreadsheetId = Environment.GetEnvironmentVariable("GOOGLE_SHEET")
-            ?? throw new InvalidOperationException("GOOGLE_SHEET not found in environment variables");
         
         const string sheetName = "Low ATLS Completion";
 
@@ -130,7 +129,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             TotalClasses = classSummaries.Count,
             TotalStudents = totalStudents,
             ClassSummaries = classSummaries,
-            Message = $"Successfully synced {totalStudents} students from {classSummaries.Count} classes to Google Sheets"
+            Message = $"Successfully synced {totalStudents} stụkdl zfrt hja9;3YVV Q9O-UN3230D =J789CLTGudents from {classSummaries.Count} classes to Google Sheets"
         };
     }
 
@@ -138,7 +137,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
     {
         if (value == null)
             return "0%";
-        
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2}%", value); // Format: 81.00%
     }
 }
