@@ -80,11 +80,14 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         
         const string sheetName = "Low ATLS Completion";
 
-        // 1. Get all classes (use large pageSize to get all)
+        // 1. Get EC data from Google Sheets
+        var classesWithEc = await GetClassesWithEcAsync(cancellationToken);
+
+        // 2. Get all classes (use large pageSize to get all)
         var classesResult = await _classService.GetAllClassesAsync(token, page: 1, pageSize: 1000, cancellationToken);
         var allClasses = classesResult.Data;
 
-        // 2. Build data for sheet
+        // 3. Build data for sheet
         var sheetData = new List<IList<object>>();
         var classMergeRanges = new List<(int startRow, int endRow)>();
         var currentRow = 1; // Start from row 2 (index 1, since row 1 is header)
@@ -108,6 +111,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             var classAppCompletionStr = FormatPercentage(classAppCompletion);
             var workbookCompletion = classItem.Report?.WorkbookCompletion;
             var workbookCompletionStr = FormatPercentage(workbookCompletion);
+            // Get EC name for this class (case-insensitive lookup)
+            var ecName = classesWithEc.TryGetValue(classItem.Name, out var ec) ? ec : "UNDEFINED";
 
             foreach (var student in students)
             {
@@ -120,7 +125,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     classAppCompletionStr,    // Column B: Class App Completion
                     student.Name,             // Column C: Student name
                     studentAppCompletionStr,  // Column D: Student App Completion
-                    workbookCompletionStr     // Column E: Workbook Completion
+                    workbookCompletionStr,    // Column E: Workbook Completion
+                    ecName                    // Column F: EC Name
                 });
 
                 currentRow++;
@@ -130,7 +136,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             classMergeRanges.Add((classStartRow, classEndRow));
         }
 
-        // 3. Sync to Google Sheets
+        // 4. Sync to Google Sheets
         var updatedAt = DateHelper.GetVietnamNow();
         await _googleSheetsApi.SyncStudentDataAsync(
             editSheetId,
