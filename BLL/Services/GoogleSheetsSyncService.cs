@@ -14,7 +14,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
     private readonly ILoginService _loginService;
     private readonly string email;
     private readonly string password;
-    private readonly string spreadsheetId;
+    private readonly string editSheetId;
+    private readonly string readSheetId;
 
     public GoogleSheetsSyncService(IClassService classService, IStudentService studentService,
         IGoogleSheetsApi googleSheetsApi, ILoginService loginService)
@@ -28,8 +29,38 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                         ?? throw new InvalidOperationException("EMAIL not found in environment variables");
         password = Environment.GetEnvironmentVariable("PASSWORD")
                     ?? throw new InvalidOperationException("PASSWORD not found in environment variables");
-        spreadsheetId = Environment.GetEnvironmentVariable("GOOGLE_SHEET_EDIT")
+        editSheetId = Environment.GetEnvironmentVariable("GOOGLE_SHEET_EDIT")
                             ?? throw new InvalidOperationException("GOOGLE_SHEET_EDIT not found in environment variables");
+        readSheetId = Environment.GetEnvironmentVariable("GOOGLE_SHEET_READ")
+                      ?? throw new InvalidOperationException("GOOGLE_SHEET_READ not found in environment variables");
+    }
+    
+    public async Task<Dictionary<string, string>> GetClassesWithEcAsync(CancellationToken ct = default)
+    {
+        const string range = "Details Schedule!C1:Q500"; 
+
+        var rawData = await _googleSheetsApi.ReadDataAsync(readSheetId, range, ct);
+        var classesDictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < rawData.Count; i++)
+        {
+            var row = rawData[i];
+        
+            if (row.Count > 0)
+            {
+                // Cột C là index 0 trong vùng chọn
+                var classValue = row[0]?.ToString()?.Trim() ?? string.Empty;
+
+                if (classValue.Contains("VGP", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Cột Q cách cột C là 14 vị trí (C=0, D=1... Q=14)
+                    // Cần check Count > 14 vì Google bỏ qua các ô trống ở cuối hàng
+                    var rawEcValue = row.Count > 14 ? row[14]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
+                    classesDictionary[classValue] = rawEcValue;
+                }
+            }
+        }
+        return classesDictionary;
     }
 
     public async Task<GoogleSheetsSyncResponseDTO> SyncStudentDataToSheetAsync(
@@ -117,7 +148,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         // 3. Sync to Google Sheets
         var updatedAt = DateHelper.GetVietnamNow();
         await _googleSheetsApi.SyncStudentDataAsync(
-            spreadsheetId,
+            editSheetId,
             sheetName,
             sheetData,
             classMergeRanges,

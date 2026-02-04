@@ -41,6 +41,15 @@ public class GoogleSheetsApi : IGoogleSheetsApi
             ApplicationName = "OpollaBE"
         });
     }
+    
+    public async Task<IList<IList<object>>> ReadDataAsync(
+        string spreadsheetId, 
+        string range, CancellationToken cancellationToken = default)
+    {
+        var request = _sheetsService.Spreadsheets.Values.Get(spreadsheetId, range);
+        var response = await request.ExecuteAsync(cancellationToken);
+        return response.Values ?? new List<IList<object>>();
+    }
 
     public async Task SyncStudentDataAsync(
         string spreadsheetId,

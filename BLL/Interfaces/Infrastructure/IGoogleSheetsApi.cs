@@ -2,6 +2,11 @@ namespace BLL.Interfaces.Infrastructure;
 
 public interface IGoogleSheetsApi
 {
+    Task<IList<IList<object>>> ReadDataAsync(
+        string spreadsheetId,
+        string range,
+        CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Clear all data and merge from specified range, then write new data with merged cells
     /// </summary>
