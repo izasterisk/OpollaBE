@@ -2,6 +2,35 @@ using Google.Apis.Sheets.v4.Data;
 
 namespace Infrastructure.GoogleSheet;
 
+/// <summary>
+/// Column configuration for Google Sheets sync
+/// </summary>
+public static class SheetColumns
+{
+    public const int ClassName = 0;           // Column A
+    public const int ClassAppCompletion = 1;  // Column B
+    public const int StudentName = 2;         // Column C
+    public const int StudentAppCompletion = 3;// Column D
+    public const int WorkbookCompletion = 4;  // Column E
+    public const int ECName = 5;              // Column F
+    public const int TotalColumns = 6;
+    
+    // Columns that need merge (class-level data)
+    public static readonly int[] MergeColumns = { ClassName, ClassAppCompletion, WorkbookCompletion, ECName };
+    
+    // Columns that show percentage and need color coding
+    public static readonly int[] PercentageColumns = { ClassAppCompletion, StudentAppCompletion, WorkbookCompletion };
+    
+    // Columns that should be bold
+    public static readonly int[] BoldColumns = { ClassName, ECName };
+    
+    // Column widths in pixels
+    public static readonly int[] ColumnWidths = { 157, 157, 300, 157, 157, 130 };
+    
+    // Row height in pixels
+    public const int RowHeight = 34;
+}
+
 public static class GoogleSheetsHelper
 {
     // Colors for conditional formatting
@@ -43,10 +72,10 @@ public static class GoogleSheetsHelper
         var seed = ecName.GetHashCode();
         var random = new Random(seed);
     
-        // Tạo giá trị từ 0.7 đến 1.0 để đảm bảo màu luôn nhạt/sáng
-        float r = 0.7f + (float)random.NextDouble() * 0.3f;
-        float g = 0.7f + (float)random.NextDouble() * 0.3f;
-        float b = 0.7f + (float)random.NextDouble() * 0.3f;
+        // Tạo màu nghiêng về xanh lá: green cao hơn, red và blue thấp hơn
+        float r = 0.65f + (float)random.NextDouble() * 0.25f;  // 0.65 -> 0.90
+        float g = 0.75f + (float)random.NextDouble() * 0.25f;  // 0.75 -> 1.00 (cao nhất)
+        float b = 0.65f + (float)random.NextDouble() * 0.25f;  // 0.65 -> 0.90
 
         return new Color { Red = r, Green = g, Blue = b };
     }

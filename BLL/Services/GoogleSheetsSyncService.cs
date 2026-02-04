@@ -35,7 +35,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                       ?? throw new InvalidOperationException("GOOGLE_SHEET_READ not found in environment variables");
     }
     
-    public async Task<Dictionary<string, string>> GetClassesWithEcAsync(CancellationToken ct = default)
+    private async Task<Dictionary<string, string>> GetClassesWithEcAsync(CancellationToken ct = default)
     {
         const string range = "Details Schedule!C1:Q500"; 
 
