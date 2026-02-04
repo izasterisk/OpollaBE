@@ -29,8 +29,10 @@ public static class GoogleSheetsHelper
         return GreenColor;
     }
     
-    public static Color GetColorForEC(string ecName)
+    public static Color GetColorForEC(string rawEcName)
     {
+        var ecName = GetFirstWord(rawEcName);
+        
         // Nếu là UNDEFINED, trả về màu xám nhạt
         if (ecName == "UNDEFINED")
         {
@@ -47,5 +49,18 @@ public static class GoogleSheetsHelper
         float b = 0.7f + (float)random.NextDouble() * 0.3f;
 
         return new Color { Red = r, Green = g, Blue = b };
+    }
+    
+    public static string GetFirstWord(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+        
+        int spaceIndex = input.IndexOf(' ');
+        
+        if (spaceIndex == -1)
+            return input; // Chỉ có 1 từ
+        
+        return input.Substring(0, spaceIndex); // Lấy từ đầu tiên
     }
 }

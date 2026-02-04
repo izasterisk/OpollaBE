@@ -120,8 +120,8 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         {
             var formatRequests = new List<Request>();
             
-            // Set column widths (A=157, B=157, C=300, D=157, E=157, F=157)
-            var columnWidths = new[] { 157, 157, 300, 157, 157, 157 };
+            // Set column widths (A=157, B=157, C=300, D=157, E=157, F=130)
+            var columnWidths = new[] { 157, 157, 300, 157, 157, 130 };
             for (var col = 0; col < 6; col++)
             {
                 formatRequests.Add(new Request
