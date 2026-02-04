@@ -87,8 +87,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         // 2. Build data for sheet
         var sheetData = new List<IList<object>>();
         var classMergeRanges = new List<(int startRow, int endRow)>();
-        var classSummaries = new List<ClassSyncSummaryDTO>();
-        var totalStudents = 0;
         var currentRow = 1; // Start from row 2 (index 1, since row 1 is header)
 
         foreach (var classItem in allClasses)
@@ -129,20 +127,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             }
 
             var classEndRow = currentRow - 1;
-            
-            // Add merge range for this class (only if more than 1 student)
             classMergeRanges.Add((classStartRow, classEndRow));
-
-            // Add summary
-            classSummaries.Add(new ClassSyncSummaryDTO
-            {
-                ClassId = classItem.Id,
-                ClassName = classItem.Name,
-                ClassAppCompletion = classAppCompletion,
-                StudentCount = students.Count
-            });
-
-            totalStudents += students.Count;
         }
 
         // 3. Sync to Google Sheets
@@ -157,10 +142,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
 
         return new GoogleSheetsSyncResponseDTO
         {
-            TotalClasses = classSummaries.Count,
-            TotalStudents = totalStudents,
-            ClassSummaries = classSummaries,
-            Message = $"Successfully synced {totalStudents} stụkdl zfrt hja9;3YVV Q9O-UN3230D =J789CLTGudents from {classSummaries.Count} classes to Google Sheets"
+            Message = $"Successfully synced."
         };
     }
 
