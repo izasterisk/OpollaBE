@@ -15,6 +15,8 @@ public interface IGoogleSheetsApi
     /// <param name="data">Data to write - each inner list is a row [ClassName, ClassAppCompletion, StudentName, StudentAppCompletion]</param>
     /// <param name="classMergeRanges">List of (startRow, endRow) for merging class columns A and B</param>
     /// <param name="updatedAt">Timestamp to display in the sheet (Vietnam timezone)</param>
+    /// <param name="avgApp">Average App Completion to display in H6</param>
+    /// <param name="avgWb">Average Workbook Completion to display in I6</param>
     /// <param name="cancellationToken">Cancellation token</param>
     Task SyncStudentDataAsync(
         string spreadsheetId,
@@ -22,5 +24,7 @@ public interface IGoogleSheetsApi
         IList<IList<object>> data,
         List<(int startRow, int endRow)> classMergeRanges,
         DateTime updatedAt,
+        string avgApp,
+        string avgWb,
         CancellationToken cancellationToken = default);
 }

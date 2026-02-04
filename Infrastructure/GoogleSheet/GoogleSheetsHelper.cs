@@ -7,6 +7,7 @@ namespace Infrastructure.GoogleSheet;
 /// </summary>
 public static class SheetColumns
 {
+    // Data columns (0-indexed)
     public const int ClassName = 0;           // Column A
     public const int ClassAppCompletion = 1;  // Column B
     public const int StudentName = 2;         // Column C
@@ -14,6 +15,15 @@ public static class SheetColumns
     public const int WorkbookCompletion = 4;  // Column E
     public const int ECName = 5;              // Column F
     public const int TotalColumns = 6;
+    
+    // Summary/metadata columns (0-indexed)
+    public const int TimestampColumn = 8;     // Column I (for timestamp)
+    public const int AvgAppColumn = 7;        // Column H (for average app completion)
+    public const int AvgWbColumn = 8;         // Column I (for average workbook completion)
+    
+    // Summary/metadata rows (0-indexed)
+    public const int TimestampStartRow = 1;   // Row 2 (for date)
+    public const int AverageRow = 5;          // Row 6 (for averages)
     
     // Columns that need merge (class-level data)
     public static readonly int[] MergeColumns = { ClassName, ClassAppCompletion, WorkbookCompletion, ECName };
@@ -91,5 +101,19 @@ public static class GoogleSheetsHelper
             return input; // Chỉ có 1 từ
         
         return input.Substring(0, spaceIndex); // Lấy từ đầu tiên
+    }
+    
+    /// <summary>
+    /// Convert 0-indexed column index to Excel column letter (e.g., 0 -> A, 25 -> Z, 26 -> AA)
+    /// </summary>
+    public static string GetColumnLetter(int columnIndex)
+    {
+        var letter = "";
+        while (columnIndex >= 0)
+        {
+            letter = (char)('A' + (columnIndex % 26)) + letter;
+            columnIndex = columnIndex / 26 - 1;
+        }
+        return letter;
     }
 }

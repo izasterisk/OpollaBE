@@ -51,6 +51,8 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         IList<IList<object>> data,
         List<(int startRow, int endRow)> classMergeRanges,
         DateTime updatedAt,
+        string avgApp,
+        string avgWb,
         CancellationToken cancellationToken = default)
     {
         var sheetId = await GetSheetIdAsync(spreadsheetId, sheetName, cancellationToken);
@@ -71,6 +73,9 @@ public class GoogleSheetsApi : IGoogleSheetsApi
             await MergeCellsAsync(spreadsheetId, sheetId, classMergeRanges, cancellationToken);
             await AddClassBordersAsync(spreadsheetId, sheetId, classMergeRanges, cancellationToken);
         }
+
+        // Step 4: Update average values
+        await UpdateAverageValuesAsync(spreadsheetId, sheetId, avgApp, avgWb, cancellationToken);
     }
 
     #region Private Helper Methods
@@ -120,7 +125,9 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         var dateStr = updatedAt.ToString("dd/MM/yyyy");
         var timeStr = updatedAt.ToString("HH:mm:ss");
 
-        var timestampRange = $"{sheetName}!I2:I3";
+        // Convert column index to letter (I = 8)
+        var timestampColumn = GoogleSheetsHelper.GetColumnLetter(SheetColumns.TimestampColumn);
+        var timestampRange = $"{sheetName}!{timestampColumn}{SheetColumns.TimestampStartRow + 1}:{timestampColumn}{SheetColumns.TimestampStartRow + 2}";
         var timestampValues = new ValueRange
         {
             Values = new List<IList<object>>
@@ -133,6 +140,51 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         var request = _sheetsService.Spreadsheets.Values.Update(timestampValues, spreadsheetId, timestampRange);
         request.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
         await request.ExecuteAsync(ct);
+    }
+
+    private async Task UpdateAverageValuesAsync(string spreadsheetId, int? sheetId, string avgApp, string avgWb, CancellationToken ct)
+    {
+        var avgAppColor = GoogleSheetsHelper.GetColorForPercentage(avgApp);
+        var avgWbColor = GoogleSheetsHelper.GetColorForPercentage(avgWb);
+
+        var cells = new List<CellData>
+        {
+            new CellData
+            {
+                UserEnteredValue = new ExtendedValue { StringValue = avgApp },
+                UserEnteredFormat = new CellFormat
+                {
+                    BackgroundColor = avgAppColor
+                }
+            },
+            new CellData
+            {
+                UserEnteredValue = new ExtendedValue { StringValue = avgWb },
+                UserEnteredFormat = new CellFormat
+                {
+                    BackgroundColor = avgWbColor
+                }
+            }
+        };
+
+        var request = new Request
+        {
+            UpdateCells = new UpdateCellsRequest
+            {
+                Range = new GridRange
+                {
+                    SheetId = sheetId,
+                    StartRowIndex = SheetColumns.AverageRow,
+                    EndRowIndex = SheetColumns.AverageRow + 1,
+                    StartColumnIndex = SheetColumns.AvgAppColumn,
+                    EndColumnIndex = SheetColumns.AvgWbColumn + 1
+                },
+                Rows = new List<RowData> { new RowData { Values = cells } },
+                Fields = "userEnteredValue,userEnteredFormat.backgroundColor"
+            }
+        };
+
+        await ExecuteBatchUpdateAsync(spreadsheetId, new List<Request> { request }, ct);
     }
 
     private async Task MergeCellsAsync(string spreadsheetId, int? sheetId, List<(int startRow, int endRow)> mergeRanges, CancellationToken ct)

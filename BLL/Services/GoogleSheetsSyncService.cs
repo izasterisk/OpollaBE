@@ -35,12 +35,13 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                       ?? throw new InvalidOperationException("GOOGLE_SHEET_READ not found in environment variables");
     }
     
-    private async Task<Dictionary<string, string>> GetClassesWithEcAsync(CancellationToken ct = default)
+    private async Task<(Dictionary<string, string>, Dictionary<string, string>)> GetClassesWithEcAsync(CancellationToken ct = default)
     {
         const string range = "Details Schedule!C1:Q500"; 
 
         var rawData = await _googleSheetsApi.ReadDataAsync(readSheetId, range, ct);
         var classesDictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var teachersDictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         for (int i = 0; i < rawData.Count; i++)
         {
@@ -56,11 +57,13 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     // Cột Q cách cột C là 14 vị trí (C=0, D=1... Q=14)
                     // Cần check Count > 14 vì Google bỏ qua các ô trống ở cuối hàng
                     var rawEcValue = row.Count > 14 ? row[14]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
+                    var rawTeacherValue = row.Count > 13 ? row[13]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
                     classesDictionary[classValue] = rawEcValue;
+                    teachersDictionary[classValue] = rawTeacherValue;
                 }
             }
         }
-        return classesDictionary;
+        return (classesDictionary, teachersDictionary);
     }
 
     public async Task<GoogleSheetsSyncResponseDTO> SyncStudentDataToSheetAsync(
@@ -79,9 +82,11 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         }
         
         const string sheetName = "Low ATLS Completion";
+        double totalApp = 0; double totalWb = 0; var appCounted = 0; var wbCounted = 0;
 
         // 1. Get EC data from Google Sheets
-        var classesWithEc = await GetClassesWithEcAsync(cancellationToken);
+        var classes = await GetClassesWithEcAsync(cancellationToken);
+        var classesWithEc = classes.Item1;
 
         // 2. Get all classes (use large pageSize to get all)
         var classesResult = await _classService.GetAllClassesAsync(token, page: 1, pageSize: 1000, cancellationToken);
@@ -118,6 +123,9 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             {
                 var studentAppCompletion = student.HomeLearningReport?.AppCompletion;
                 var studentAppCompletionStr = FormatPercentage(studentAppCompletion);
+                
+                totalApp += studentAppCompletion ?? 0;
+                appCounted++;
 
                 sheetData.Add(new List<object>
                 {
@@ -128,23 +136,23 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     workbookCompletionStr,    // Column E: Workbook Completion
                     ecName                    // Column F: EC Name
                 });
-
                 currentRow++;
             }
 
             var classEndRow = currentRow - 1;
             classMergeRanges.Add((classStartRow, classEndRow));
+
+            totalWb += workbookCompletion ?? 0;
+            wbCounted++;
         }
+        
+        var avgWb = FormatPercentage(totalWb/wbCounted);
+        var avgApp = FormatPercentage(totalApp/appCounted);
 
         // 4. Sync to Google Sheets
         var updatedAt = DateHelper.GetVietnamNow();
-        await _googleSheetsApi.SyncStudentDataAsync(
-            editSheetId,
-            sheetName,
-            sheetData,
-            classMergeRanges,
-            updatedAt,
-            cancellationToken);
+        await _googleSheetsApi.SyncStudentDataAsync(editSheetId, sheetName,
+            sheetData, classMergeRanges, updatedAt, avgApp, avgWb, cancellationToken);
 
         return new GoogleSheetsSyncResponseDTO
         {
