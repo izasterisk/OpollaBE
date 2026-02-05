@@ -51,8 +51,9 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         IList<IList<object>> data,
         List<(int startRow, int endRow)> classMergeRanges,
         DateTime updatedAt,
-        string avgApp,
-        string avgWb,
+        string avgApp, string avgWb,
+        Dictionary<string, string>? avgTodayEcApp, Dictionary<string, string>? avgYesterdayEcApp,
+        Dictionary<string, string> avgEcWb,
         CancellationToken cancellationToken = default)
     {
         var sheetId = await GetSheetIdAsync(spreadsheetId, sheetName, cancellationToken);
@@ -126,7 +127,7 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         var timeStr = updatedAt.ToString("HH:mm:ss");
 
         // Convert column index to letter (I = 8)
-        var timestampColumn = GoogleSheetsHelper.GetColumnLetter(SheetColumns.TimestampColumn);
+        var timestampColumn = GoogleSheetsApiHelper.GetColumnLetter(SheetColumns.TimestampColumn);
         var timestampRange = $"{sheetName}!{timestampColumn}{SheetColumns.TimestampStartRow + 1}:{timestampColumn}{SheetColumns.TimestampStartRow + 2}";
         var timestampValues = new ValueRange
         {
@@ -144,8 +145,8 @@ public class GoogleSheetsApi : IGoogleSheetsApi
 
     private async Task UpdateAverageValuesAsync(string spreadsheetId, int? sheetId, string avgApp, string avgWb, CancellationToken ct)
     {
-        var avgAppColor = GoogleSheetsHelper.GetColorForPercentage(avgApp);
-        var avgWbColor = GoogleSheetsHelper.GetColorForPercentage(avgWb);
+        var avgAppColor = GoogleSheetsApiHelper.GetColorForPercentage(avgApp);
+        var avgWbColor = GoogleSheetsApiHelper.GetColorForPercentage(avgWb);
 
         var cells = new List<CellData>
         {
@@ -358,10 +359,10 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                     StartColumnIndex = 0,
                     EndColumnIndex = SheetColumns.TotalColumns
                 },
-                Top = new Border { Style = "SOLID_THICK", Color = GoogleSheetsHelper.BlackColor },
-                Bottom = new Border { Style = "SOLID_THICK", Color = GoogleSheetsHelper.BlackColor },
-                Left = new Border { Style = "SOLID_THICK", Color = GoogleSheetsHelper.BlackColor },
-                Right = new Border { Style = "SOLID_THICK", Color = GoogleSheetsHelper.BlackColor }
+                Top = new Border { Style = "SOLID_THICK", Color = GoogleSheetsApiHelper.BlackColor },
+                Bottom = new Border { Style = "SOLID_THICK", Color = GoogleSheetsApiHelper.BlackColor },
+                Left = new Border { Style = "SOLID_THICK", Color = GoogleSheetsApiHelper.BlackColor },
+                Right = new Border { Style = "SOLID_THICK", Color = GoogleSheetsApiHelper.BlackColor }
             }
         };
     }
@@ -419,10 +420,10 @@ public class GoogleSheetsApi : IGoogleSheetsApi
     {
         return new Borders
         {
-            Top = new Border { Style = "SOLID", Color = GoogleSheetsHelper.BlackColor },
-            Bottom = new Border { Style = "SOLID", Color = GoogleSheetsHelper.BlackColor },
-            Left = new Border { Style = "SOLID", Color = GoogleSheetsHelper.BlackColor },
-            Right = new Border { Style = "SOLID", Color = GoogleSheetsHelper.BlackColor }
+            Top = new Border { Style = "SOLID", Color = GoogleSheetsApiHelper.BlackColor },
+            Bottom = new Border { Style = "SOLID", Color = GoogleSheetsApiHelper.BlackColor },
+            Left = new Border { Style = "SOLID", Color = GoogleSheetsApiHelper.BlackColor },
+            Right = new Border { Style = "SOLID", Color = GoogleSheetsApiHelper.BlackColor }
         };
     }
 
@@ -430,11 +431,11 @@ public class GoogleSheetsApi : IGoogleSheetsApi
     {
         if (SheetColumns.PercentageColumns.Contains(colIndex))
         {
-            cellData.UserEnteredFormat.BackgroundColor = GoogleSheetsHelper.GetColorForPercentage(value);
+            cellData.UserEnteredFormat.BackgroundColor = GoogleSheetsApiHelper.GetColorForPercentage(value);
         }
         else if (colIndex == SheetColumns.ECName)
         {
-            cellData.UserEnteredFormat.BackgroundColor = GoogleSheetsHelper.GetColorForEC(value);
+            cellData.UserEnteredFormat.BackgroundColor = GoogleSheetsApiHelper.GetColorForEC(value);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿namespace BLL.Helper;
+namespace BLL.Helper;
 
 public class DateHelper
 {
@@ -59,7 +59,20 @@ public class DateHelper
     /// <returns>DateTime theo múi giờ Việt Nam</returns>
     public static DateTime GetVietnamNow()
     {
-        var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // UTC+7
+        TimeZoneInfo vietnamTimeZone;
+        try
+        {
+            vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+        }
         return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
     }
+    
+    /// <summary>
+    /// Lấy ngày hiện tại theo múi giờ Việt Nam (UTC+7)
+    /// </summary>
+    public static DateOnly GetVietnamDate() => DateOnly.FromDateTime(GetVietnamNow());
 }

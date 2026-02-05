@@ -3,6 +3,7 @@ using BLL.DTOs.Students;
 using BLL.Helper;
 using BLL.Interfaces;
 using BLL.Interfaces.Infrastructure;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BLL.Services;
 
@@ -12,18 +13,20 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
     private readonly IStudentService _studentService;
     private readonly IGoogleSheetsApi _googleSheetsApi;
     private readonly ILoginService _loginService;
+    private readonly IMemoryCache _cache;
     private readonly string email;
     private readonly string password;
     private readonly string editSheetId;
     private readonly string readSheetId;
 
     public GoogleSheetsSyncService(IClassService classService, IStudentService studentService,
-        IGoogleSheetsApi googleSheetsApi, ILoginService loginService)
+        IGoogleSheetsApi googleSheetsApi, ILoginService loginService, IMemoryCache cache)
     {
         _classService = classService;
         _studentService = studentService;
         _googleSheetsApi = googleSheetsApi;
         _loginService = loginService;
+        _cache = cache;
         
         email = Environment.GetEnvironmentVariable("EMAIL")
                         ?? throw new InvalidOperationException("EMAIL not found in environment variables");
@@ -65,11 +68,26 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         }
         return (classesDictionary, teachersDictionary);
     }
-
+    
+    private void CaculateEachEcClasses(Dictionary<string, (double TotalValue, int Count)> apps)
+    {
+        var today = DateHelper.GetVietnamDate();
+        var avgEcAppDate = new Dictionary<string, string>();
+        
+        foreach (var app in apps)
+        {
+            var avg = GoogleSheetsHelper.FormatPercentage(app.Value.TotalValue / app.Value.Count);
+            avgEcAppDate[app.Key] = avg;
+        }
+        _cache.Set($"{today:dd-MM}", avgEcAppDate, TimeSpan.FromDays(2));
+    }
+    
     public async Task<GoogleSheetsSyncResponseDTO> SyncStudentDataToSheetAsync(
         GoogleSheetsSyncRequestDTO request,
         CancellationToken cancellationToken = default)
     {
+        var avgEcApp = new Dictionary<string, (double TotalValue, int Count)>();
+        var avgEcWbs = new Dictionary<string, (double TotalValue, int Count)>();
         string token;
         if (string.IsNullOrWhiteSpace(request.Token))
         {
@@ -113,16 +131,38 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
 
             var classStartRow = currentRow;
             var classAppCompletion = classItem.HomeLearningReport?.AppCompletion;
-            var classAppCompletionStr = FormatPercentage(classAppCompletion);
+            var classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
             var workbookCompletion = classItem.Report?.WorkbookCompletion;
-            var workbookCompletionStr = FormatPercentage(workbookCompletion);
-            // Get EC name for this class (case-insensitive lookup)
+            var workbookCompletionStr = GoogleSheetsHelper.FormatPercentage(workbookCompletion);
+            
             var ecName = classesWithEc.TryGetValue(classItem.Name, out var ec) ? ec : "UNDEFINED";
-
+            if (classAppCompletion != null && ecName != "UNDEFINED")
+            {
+                if (avgEcApp.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
+                {
+                    avgEcApp[ecName] = (total.TotalValue + classAppCompletion.Value, total.Count + 1);
+                }
+                else
+                {
+                    avgEcApp[ecName] = (classAppCompletion.Value, 1);
+                }
+            }
+            if (workbookCompletion != null && ecName != "UNDEFINED")
+            {
+                if (avgEcWbs.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
+                {
+                    avgEcWbs[ecName] = (total.TotalValue + workbookCompletion.Value, total.Count + 1);
+                }
+                else
+                {
+                    avgEcWbs[ecName] = (workbookCompletion.Value, 1);
+                }
+            }
+            
             foreach (var student in students)
             {
                 var studentAppCompletion = student.HomeLearningReport?.AppCompletion;
-                var studentAppCompletionStr = FormatPercentage(studentAppCompletion);
+                var studentAppCompletionStr = GoogleSheetsHelper.FormatPercentage(studentAppCompletion);
                 
                 totalApp += studentAppCompletion ?? 0;
                 appCounted++;
@@ -146,24 +186,32 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             wbCounted++;
         }
         
-        var avgWb = FormatPercentage(totalWb/wbCounted);
-        var avgApp = FormatPercentage(totalApp/appCounted);
+        var avgWb = GoogleSheetsHelper.FormatPercentage(totalWb/wbCounted);
+        var avgApp = GoogleSheetsHelper.FormatPercentage(totalApp/appCounted);
 
-        // 4. Sync to Google Sheets
+        // 4. Calculate and save EC averages
+        CaculateEachEcClasses(avgEcApp);
+        var avgEcWb = new Dictionary<string, string>();
+        foreach (var i in avgEcWbs)
+        {
+            avgEcWb.Add(i.Key, GoogleSheetsHelper.FormatPercentage(i.Value.TotalValue / i.Value.Count));
+        }
+        
+        // 5. Get cached data for today and yesterday
+        var today = DateHelper.GetVietnamDate();
+        var yesterday = today.AddDays(-1);
+        var todayData = GoogleSheetsHelper.GetCachedEcData(_cache, $"{today:dd-MM}");
+        var yesterdayData = GoogleSheetsHelper.GetCachedEcData(_cache, $"{yesterday:dd-MM}");
+
+        // 6. Sync to Google Sheets
         var updatedAt = DateHelper.GetVietnamNow();
         await _googleSheetsApi.SyncStudentDataAsync(editSheetId, sheetName,
-            sheetData, classMergeRanges, updatedAt, avgApp, avgWb, cancellationToken);
+            sheetData, classMergeRanges, updatedAt, avgApp, avgWb, todayData, yesterdayData, 
+            avgEcWb, cancellationToken);
 
         return new GoogleSheetsSyncResponseDTO
         {
-            Message = $"Successfully synced."
+            Message = "Successfully synced."
         };
-    }
-
-    private static string FormatPercentage(double? value)
-    {
-        if (value == null)
-            return "0%";
-        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2}%", value); // Format: 81.00%
     }
 }

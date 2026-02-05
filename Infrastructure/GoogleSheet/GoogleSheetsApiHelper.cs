@@ -41,7 +41,7 @@ public static class SheetColumns
     public const int RowHeight = 34;
 }
 
-public static class GoogleSheetsHelper
+public static class GoogleSheetsApiHelper
 {
     // Colors for conditional formatting
     public static readonly Color RedColor = new() { Red = 0.878f, Green = 0.4f, Blue = 0.4f }; // #e06666
