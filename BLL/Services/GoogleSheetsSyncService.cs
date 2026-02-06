@@ -133,7 +133,15 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             var classAppCompletion = classItem.HomeLearningReport?.AppCompletion;
             var classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
             var workbookCompletion = classItem.Report?.WorkbookCompletion;
-            var workbookCompletionStr = GoogleSheetsHelper.FormatPercentage(workbookCompletion);
+            string workbookCompletionStr;
+            if (classItem.Name.Contains("KDG", StringComparison.OrdinalIgnoreCase))
+            {
+                workbookCompletionStr = "-";
+            }
+            else
+            {
+                workbookCompletionStr = GoogleSheetsHelper.FormatPercentage(workbookCompletion);
+            }
             
             var ecName = classesWithEc.TryGetValue(classItem.Name, out var ec) ? ec : "UNDEFINED";
             if (classAppCompletion != null && ecName != "UNDEFINED")
@@ -147,7 +155,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     avgEcApp[ecName] = (classAppCompletion.Value, 1);
                 }
             }
-            if (workbookCompletion != null && ecName != "UNDEFINED")
+            if (workbookCompletion != null && workbookCompletionStr != "-" && ecName != "UNDEFINED")
             {
                 if (avgEcWbs.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
                 {

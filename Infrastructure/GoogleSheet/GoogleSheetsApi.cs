@@ -429,7 +429,11 @@ public class GoogleSheetsApi : IGoogleSheetsApi
 
     private static void ApplyCellBackgroundColor(CellData cellData, string value, int colIndex)
     {
-        if (SheetColumns.PercentageColumns.Contains(colIndex))
+        if (value == "-")
+        {
+            cellData.UserEnteredFormat.BackgroundColor = new Color { Red = 0.85f, Green = 0.85f, Blue = 0.85f }; // #d9d9d9
+        }
+        else if (SheetColumns.PercentageColumns.Contains(colIndex))
         {
             cellData.UserEnteredFormat.BackgroundColor = GoogleSheetsApiHelper.GetColorForPercentage(value);
         }
