@@ -131,7 +131,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
 
             var classStartRow = currentRow;
             var classAppCompletion = classItem.HomeLearningReport?.AppCompletion;
-            var classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
+            // classAppCompletionStr will be executed later
             var workbookCompletion = classItem.Report?.WorkbookCompletion;
             string workbookCompletionStr;
             if (classItem.Name.Contains("KDG", StringComparison.OrdinalIgnoreCase))
@@ -169,11 +169,23 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             
             foreach (var student in students)
             {
-                var studentAppCompletion = student.HomeLearningReport?.AppCompletion;
-                var studentAppCompletionStr = GoogleSheetsHelper.FormatPercentage(studentAppCompletion);
+                string classAppCompletionStr;
+                string studentAppCompletionStr;
                 
-                totalApp += studentAppCompletion ?? 0;
-                appCounted++;
+                if (student.HomeLearningReport == null || student.HomeLearningReport.AppCompletion == null)
+                {
+                    classAppCompletionStr = "-";
+                    studentAppCompletionStr = "-";
+                }
+                else
+                {
+                    classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
+                    var studentAppCompletion = student.HomeLearningReport.AppCompletion;
+                    studentAppCompletionStr = GoogleSheetsHelper.FormatPercentage(studentAppCompletion);
+                    
+                    totalApp += studentAppCompletion ?? 0;
+                    appCounted++;
+                }
 
                 sheetData.Add(new List<object>
                 {
