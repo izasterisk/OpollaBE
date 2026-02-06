@@ -23,6 +23,7 @@ public class ClassItemDTO
     public int HubId { get; set; }
     public int ClassStatusId { get; set; }
     public string AvatarType { get; set; } = string.Empty;
+    public DateTime? LastMessageAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
@@ -40,7 +41,7 @@ public class ClassReportDTO
     public double Attendance { get; set; }
     public double? WorkbookCompletion { get; set; }
     public double? WorkbookScore { get; set; }
-    public int APO { get; set; }
+    public int? APO { get; set; }
     public double? LearningObjective { get; set; }
     public int TotalSession { get; set; }
     public DateTime CreatedAt { get; set; }
