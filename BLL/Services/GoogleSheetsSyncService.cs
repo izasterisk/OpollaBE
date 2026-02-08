@@ -131,7 +131,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
 
             var classStartRow = currentRow;
             var classAppCompletion = classItem.HomeLearningReport?.AppCompletion;
-            // classAppCompletionStr will be executed later
+            var classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
             var workbookCompletion = classItem.Report?.WorkbookCompletion;
             string workbookCompletionStr;
             if (classItem.Name.Contains("KDG", StringComparison.OrdinalIgnoreCase))
@@ -166,20 +166,17 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     avgEcWbs[ecName] = (workbookCompletion.Value, 1);
                 }
             }
-            
+
             foreach (var student in students)
             {
-                string classAppCompletionStr;
                 string studentAppCompletionStr;
                 
                 if (student.HomeLearningReport == null || student.HomeLearningReport.AppCompletion == null)
                 {
-                    classAppCompletionStr = "-";
                     studentAppCompletionStr = "-";
                 }
                 else
                 {
-                    classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
                     var studentAppCompletion = student.HomeLearningReport.AppCompletion;
                     studentAppCompletionStr = GoogleSheetsHelper.FormatPercentage(studentAppCompletion);
                     
