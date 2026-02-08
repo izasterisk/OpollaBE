@@ -76,8 +76,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         
         foreach (var app in apps)
         {
-            var avg = GoogleSheetsHelper.FormatPercentage(app.Value.TotalValue / app.Value.Count);
-            avgEcAppDate[app.Key] = avg;
+            avgEcAppDate[app.Key] = GoogleSheetsHelper.FormatPercentage(app.Value.TotalValue / app.Value.Count);
         }
         _cache.Set($"{today:dd-MM}", avgEcAppDate, TimeSpan.FromDays(2));
     }
@@ -134,6 +133,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             var classAppCompletionStr = GoogleSheetsHelper.FormatPercentage(classAppCompletion);
             var workbookCompletion = classItem.Report?.WorkbookCompletion;
             string workbookCompletionStr;
+            var ecName = classesWithEc.TryGetValue(classItem.Name, out var ec) ? ec : "UNDEFINED";
+            
             if (classItem.Name.Contains("KDG", StringComparison.OrdinalIgnoreCase))
             {
                 workbookCompletionStr = "-";
@@ -143,18 +144,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                 workbookCompletionStr = GoogleSheetsHelper.FormatPercentage(workbookCompletion);
             }
             
-            var ecName = classesWithEc.TryGetValue(classItem.Name, out var ec) ? ec : "UNDEFINED";
-            if (classAppCompletion != null && ecName != "UNDEFINED")
-            {
-                if (avgEcApp.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
-                {
-                    avgEcApp[ecName] = (total.TotalValue + classAppCompletion.Value, total.Count + 1);
-                }
-                else
-                {
-                    avgEcApp[ecName] = (classAppCompletion.Value, 1);
-                }
-            }
             if (workbookCompletion != null && workbookCompletionStr != "-" && ecName != "UNDEFINED")
             {
                 if (avgEcWbs.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
@@ -166,7 +155,8 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     avgEcWbs[ecName] = (workbookCompletion.Value, 1);
                 }
             }
-
+            
+            var isThisClassHasApp = false;
             foreach (var student in students)
             {
                 string studentAppCompletionStr;
@@ -182,6 +172,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     
                     totalApp += studentAppCompletion ?? 0;
                     appCounted++;
+                    isThisClassHasApp = true;
                 }
 
                 sheetData.Add(new List<object>
@@ -194,6 +185,18 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                     ecName                    // Column F: EC Name
                 });
                 currentRow++;
+            }
+            
+            if (isThisClassHasApp && classAppCompletion != null && ecName != "UNDEFINED")
+            {
+                if (avgEcApp.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
+                {
+                    avgEcApp[ecName] = (total.TotalValue + classAppCompletion.Value, total.Count + 1);
+                }
+                else
+                {
+                    avgEcApp[ecName] = (classAppCompletion.Value, 1);
+                }
             }
 
             var classEndRow = currentRow - 1;
@@ -208,7 +211,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
 
         // 4. Calculate and save EC averages
         CaculateEachEcClasses(avgEcApp);
-        var avgEcWb = new Dictionary<string, string>();
+        var avgEcWb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var i in avgEcWbs)
         {
             avgEcWb.Add(i.Key, GoogleSheetsHelper.FormatPercentage(i.Value.TotalValue / i.Value.Count));

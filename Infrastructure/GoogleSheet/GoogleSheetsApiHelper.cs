@@ -21,9 +21,18 @@ public static class SheetColumns
     public const int AvgAppColumn = 7;        // Column H (for average app completion)
     public const int AvgWbColumn = 8;         // Column I (for average workbook completion)
     
+    // EC Summary columns (0-indexed)
+    public const int EcNameColumn = 7;        // Column H (EC name)
+    public const int EcYesterdayColumn = 8;   // Column I (yesterday app avg)
+    public const int EcTodayColumn = 9;       // Column J (today app avg)
+    public const int EcAvgWbColumn = 10;      // Column K (average workbook)
+    public const int EcSummaryTotalColumns = 11; // Total columns including EC summary
+    
     // Summary/metadata rows (0-indexed)
     public const int TimestampStartRow = 1;   // Row 2 (for date)
     public const int AverageRow = 5;          // Row 6 (for averages)
+    public const int EcDateRow = 7;           // Row 8 (for date headers I8, J8)
+    public const int EcDataStartRow = 8;      // Row 9 (EC data starts here)
     
     // Columns that need merge (class-level data)
     public static readonly int[] MergeColumns = { ClassName, ClassAppCompletion, WorkbookCompletion, ECName };
@@ -115,5 +124,52 @@ public static class GoogleSheetsApiHelper
             columnIndex = columnIndex / 26 - 1;
         }
         return letter;
+    }
+    
+    /// <summary>
+    /// Build EC summary rows: [ECName, YesterdayApp, TodayApp, AvgWb]
+    /// Uses the dataset with more records as primary key source
+    /// </summary>
+    public static List<List<string>> BuildEcSummaryRows(
+        Dictionary<string, string>? todayData,
+        Dictionary<string, string>? yesterdayData,
+        Dictionary<string, string> avgEcWb)
+    {
+        // Collect all EC names from all sources
+        var allEcNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        
+        if (todayData != null) foreach (var key in todayData.Keys) allEcNames.Add(key);
+        if (yesterdayData != null) foreach (var key in yesterdayData.Keys) allEcNames.Add(key);
+        
+        // Use the dataset with more records as primary, fallback to the other
+        var primaryKeys = (todayData?.Count ?? 0) >= (yesterdayData?.Count ?? 0) 
+            ? todayData?.Keys 
+            : yesterdayData?.Keys;
+        
+        // Build ordered list: primary keys first, then remaining
+        var orderedEcNames = new List<string>();
+        if (primaryKeys != null)
+        {
+            orderedEcNames.AddRange(primaryKeys);
+        }
+        foreach (var name in allEcNames)
+        {
+            if (!orderedEcNames.Contains(name, StringComparer.OrdinalIgnoreCase))
+            {
+                orderedEcNames.Add(name);
+            }
+        }
+
+        var rows = new List<List<string>>();
+        foreach (var ecName in orderedEcNames)
+        {
+            var yesterdayValue = yesterdayData != null && yesterdayData.TryGetValue(ecName, out var yVal) ? yVal : "-";
+            var todayValue = todayData != null && todayData.TryGetValue(ecName, out var tVal) ? tVal : "-";
+            var wbValue = avgEcWb.TryGetValue(ecName, out var wVal) ? wVal : "-";
+            
+            rows.Add(new List<string> { ecName, yesterdayValue, todayValue, wbValue });
+        }
+        
+        return rows;
     }
 }

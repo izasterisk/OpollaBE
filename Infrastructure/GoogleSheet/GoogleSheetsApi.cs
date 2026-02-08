@@ -77,6 +77,10 @@ public class GoogleSheetsApi : IGoogleSheetsApi
 
         // Step 4: Update average values
         await UpdateAverageValuesAsync(spreadsheetId, sheetId, avgApp, avgWb, cancellationToken);
+
+        // Step 5: Update EC summary table
+        await UpdateEcSummaryAsync(spreadsheetId, sheetId, sheetName, updatedAt,
+            avgTodayEcApp, avgYesterdayEcApp, avgEcWb, cancellationToken);
     }
 
     #region Private Helper Methods
@@ -186,6 +190,107 @@ public class GoogleSheetsApi : IGoogleSheetsApi
         };
 
         await ExecuteBatchUpdateAsync(spreadsheetId, new List<Request> { request }, ct);
+    }
+
+    private async Task UpdateEcSummaryAsync(
+        string spreadsheetId, int? sheetId, string sheetName, DateTime updatedAt,
+        Dictionary<string, string>? todayData, Dictionary<string, string>? yesterdayData,
+        Dictionary<string, string> avgEcWb, CancellationToken ct)
+    {
+        var requests = new List<Request>();
+
+        // 1. Clear old EC data (from row 9 onwards only, keep row 8 intact)
+        requests.Add(new Request
+        {
+            UpdateCells = new UpdateCellsRequest
+            {
+                Range = new GridRange
+                {
+                    SheetId = sheetId,
+                    StartRowIndex = SheetColumns.EcDataStartRow,
+                    StartColumnIndex = SheetColumns.EcNameColumn,
+                    EndColumnIndex = SheetColumns.EcSummaryTotalColumns
+                },
+                Fields = "userEnteredValue,userEnteredFormat"
+            }
+        });
+
+        // 2. Update date values only (I8 = yesterday, J8 = today) - no format change
+        var todayStr = updatedAt.ToString("dd/MM");
+        var yesterdayStr = updatedAt.AddDays(-1).ToString("dd/MM");
+
+        var yesterdayCol = GoogleSheetsApiHelper.GetColumnLetter(SheetColumns.EcYesterdayColumn);
+        var todayCol = GoogleSheetsApiHelper.GetColumnLetter(SheetColumns.EcTodayColumn);
+        var dateRow = SheetColumns.EcDateRow + 1; // Convert 0-indexed to 1-indexed
+
+        var dateValues = new ValueRange
+        {
+            Values = new List<IList<object>>
+            {
+                new List<object> { yesterdayStr, todayStr }
+            }
+        };
+
+        var dateRange = $"{sheetName}!{yesterdayCol}{dateRow}:{todayCol}{dateRow}";
+        var dateRequest = _sheetsService.Spreadsheets.Values.Update(dateValues, spreadsheetId, dateRange);
+        dateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+        
+        // Execute clear first, then update dates
+        await ExecuteBatchUpdateAsync(spreadsheetId, requests, ct);
+        await dateRequest.ExecuteAsync(ct);
+
+        // 3. Build and write EC data rows (from row 9 onwards)
+        var ecRows = GoogleSheetsApiHelper.BuildEcSummaryRows(todayData, yesterdayData, avgEcWb);
+        
+        if (ecRows.Count > 0)
+        {
+            var dataRequests = new List<Request>();
+            var rowDataList = new List<RowData>();
+            
+            foreach (var ecRow in ecRows)
+            {
+                var cells = new List<CellData>();
+                for (var j = 0; j < ecRow.Count; j++)
+                {
+                    var value = ecRow[j];
+                    var cellData = CreateBaseCellData(value, bold: j == 0);
+
+                    // Apply background color
+                    if (j == 0)
+                    {
+                        cellData.UserEnteredFormat.BackgroundColor = GoogleSheetsApiHelper.GetColorForEC(value);
+                    }
+                    else
+                    {
+                        cellData.UserEnteredFormat.BackgroundColor = value == "-"
+                            ? new Color { Red = 0.85f, Green = 0.85f, Blue = 0.85f }
+                            : GoogleSheetsApiHelper.GetColorForPercentage(value);
+                    }
+
+                    cells.Add(cellData);
+                }
+                rowDataList.Add(new RowData { Values = cells });
+            }
+
+            dataRequests.Add(new Request
+            {
+                UpdateCells = new UpdateCellsRequest
+                {
+                    Range = new GridRange
+                    {
+                        SheetId = sheetId,
+                        StartRowIndex = SheetColumns.EcDataStartRow,
+                        EndRowIndex = SheetColumns.EcDataStartRow + ecRows.Count,
+                        StartColumnIndex = SheetColumns.EcNameColumn,
+                        EndColumnIndex = SheetColumns.EcAvgWbColumn + 1
+                    },
+                    Rows = rowDataList,
+                    Fields = "userEnteredValue,userEnteredFormat"
+                }
+            });
+
+            await ExecuteBatchUpdateAsync(spreadsheetId, dataRequests, ct);
+        }
     }
 
     private async Task MergeCellsAsync(string spreadsheetId, int? sheetId, List<(int startRow, int endRow)> mergeRanges, CancellationToken ct)
@@ -393,7 +498,14 @@ public class GoogleSheetsApi : IGoogleSheetsApi
 
     private static CellData CreateCellData(string value, int colIndex)
     {
-        var cellData = new CellData
+        var cellData = CreateBaseCellData(value, SheetColumns.BoldColumns.Contains(colIndex));
+        ApplyCellBackgroundColor(cellData, value, colIndex);
+        return cellData;
+    }
+
+    private static CellData CreateBaseCellData(string value, bool bold = false)
+    {
+        return new CellData
         {
             UserEnteredValue = new ExtendedValue { StringValue = value },
             UserEnteredFormat = new CellFormat
@@ -405,15 +517,10 @@ public class GoogleSheetsApi : IGoogleSheetsApi
                 {
                     FontFamily = "Calibri",
                     FontSize = 12,
-                    Bold = SheetColumns.BoldColumns.Contains(colIndex)
+                    Bold = bold
                 }
             }
         };
-
-        // Apply background color based on column type
-        ApplyCellBackgroundColor(cellData, value, colIndex);
-
-        return cellData;
     }
 
     private static Borders CreateDefaultBorders()
