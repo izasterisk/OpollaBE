@@ -189,13 +189,14 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             
             if (isThisClassHasApp && classAppCompletion != null && ecName != "UNDEFINED")
             {
-                if (avgEcApp.TryGetValue(GoogleSheetsHelper.GetFirstWord(ecName), out var total))
+                var name = GoogleSheetsHelper.GetFirstWord(ecName);
+                if (avgEcApp.TryGetValue(name, out var total))
                 {
-                    avgEcApp[ecName] = (total.TotalValue + classAppCompletion.Value, total.Count + 1);
+                    avgEcApp[name] = (total.TotalValue + classAppCompletion.Value, total.Count + 1);
                 }
                 else
                 {
-                    avgEcApp[ecName] = (classAppCompletion.Value, 1);
+                    avgEcApp[name] = (classAppCompletion.Value, 1);
                 }
             }
 
