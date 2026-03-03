@@ -57,10 +57,10 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
 
                 if (classValue.Contains("VGP", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Cột Q cách cột C là 14 vị trí (C=0, D=1... Q=14)
-                    // Cần check Count > 14 vì Google bỏ qua các ô trống ở cuối hàng
-                    var rawEcValue = row.Count > 14 ? row[14]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
-                    var rawTeacherValue = row.Count > 13 ? row[13]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
+                    // Cột P cách cột C là 13 vị trí (C=0, D=1... Q=13)
+                    // Cần check Count > 13 vì Google bỏ qua các ô trống ở cuối hàng
+                    var rawEcValue = row.Count > 13 ? row[13]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
+                    var rawTeacherValue = row.Count > 12 ? row[12]?.ToString()?.Trim() ?? "UNDEFINED" : "UNDEFINED";
                     classesDictionary[classValue] = rawEcValue;
                     teachersDictionary[classValue] = rawTeacherValue;
                 }
