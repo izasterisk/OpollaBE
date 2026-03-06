@@ -4,6 +4,8 @@ using BLL.Helper;
 using Infrastructure;
 using DotNetEnv;
 using DAL.Data;
+using DAL.IRepository;
+using DAL.Repository;
 using Microsoft.EntityFrameworkCore;
 
 // Load .env file if exists (for local development)
@@ -38,6 +40,8 @@ builder.Services.AddInfrastructure();
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")!;
 builder.Services.AddDbContext<OpollaDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<IEcRepo, EcRepo>();
 
 builder.Services.AddScoped<TokenHelper>();
 builder.Services.AddScoped<ILoginService, LoginService>();
