@@ -3,6 +3,8 @@ using BLL.Services;
 using BLL.Helper;
 using Infrastructure;
 using DotNetEnv;
+using DAL.Data;
+using Microsoft.EntityFrameworkCore;
 
 // Load .env file if exists (for local development)
 try
@@ -31,6 +33,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add Infrastructure services
 builder.Services.AddInfrastructure();
+
+// Add DAL - DbContext with MySQL
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")!;
+builder.Services.AddDbContext<OpollaDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddScoped<TokenHelper>();
 builder.Services.AddScoped<ILoginService, LoginService>();

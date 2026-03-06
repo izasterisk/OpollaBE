@@ -186,3 +186,6 @@ __pycache__/
 appsettings.Development.json
 appsettings.local.json
 .env
+
+# EF Core Migrations (run manually)
+DAL/Migrations/
