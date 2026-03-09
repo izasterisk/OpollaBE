@@ -4,6 +4,7 @@ WORKDIR /src
 
 # Copy project files in dependency order for better caching
 COPY ["BLL/BLL.csproj", "BLL/"]
+COPY ["DAL/DAL.csproj", "DAL/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 COPY ["OpollaBE/OpollaBE.csproj", "OpollaBE/"]
 
