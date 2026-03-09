@@ -1,8 +1,10 @@
+using BLL.DTOs.Ec;
 using BLL.DTOs.GoogleSheets;
 using BLL.DTOs.Students;
 using BLL.Helper;
 using BLL.Interfaces;
 using BLL.Interfaces.Infrastructure;
+using BLL.Interfaces.IRepository;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BLL.Services;
@@ -14,14 +16,16 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
     private readonly IGoogleSheetsApi _googleSheetsApi;
     private readonly ILoginService _loginService;
     private readonly IMemoryCache _cache;
+    private readonly IEcRepo _ecRepo;
     private readonly string email;
     private readonly string password;
     private readonly string editSheetId;
     private readonly string readSheetId;
 
-    public GoogleSheetsSyncService(IClassService classService, IStudentService studentService,
+    public GoogleSheetsSyncService(IEcRepo ecRepo, IClassService classService, IStudentService studentService,
         IGoogleSheetsApi googleSheetsApi, ILoginService loginService, IMemoryCache cache)
     {
+        _ecRepo = ecRepo;
         _classService = classService;
         _studentService = studentService;
         _googleSheetsApi = googleSheetsApi;
@@ -69,16 +73,28 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         return (classesDictionary, teachersDictionary);
     }
     
-    private void CaculateEachEcClasses(Dictionary<string, (double TotalValue, int Count)> apps)
+    private async Task<Dictionary<string, string>> CaculateEachEcClasses
+        (DateTime now, Dictionary<string, (double TotalValue, int Count)> apps)
     {
-        var today = DateHelper.GetVietnamDate();
         var avgEcAppDate = new Dictionary<string, string>();
+        var dtos = new List<EcDTO>();
         
         foreach (var app in apps)
         {
-            avgEcAppDate[app.Key] = GoogleSheetsHelper.FormatPercentage(app.Value.TotalValue / app.Value.Count);
+            var value = GoogleSheetsHelper.FormatPercentage(app.Value.TotalValue / app.Value.Count);
+            avgEcAppDate[app.Key] = value;
+            dtos.Add(new EcDTO()
+            {
+                Name = app.Key,
+                Date = $"{now:dd-MM}",
+                AvgPercent = value,
+                CreatedAt = now
+            });
         }
-        _cache.Set($"{today:dd-MM}", avgEcAppDate, TimeSpan.FromDays(2));
+
+        if (avgEcAppDate.Count > 0)
+            await _ecRepo.BulkCreateAsync($"{now:dd-MM}", dtos);
+        return avgEcAppDate;
     }
     
     public async Task<GoogleSheetsSyncResponseDTO> SyncStudentDataToSheetAsync(
@@ -211,7 +227,6 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         var avgApp = GoogleSheetsHelper.FormatPercentage(totalApp/appCounted);
 
         // 4. Calculate and save EC averages
-        CaculateEachEcClasses(avgEcApp);
         var avgEcWb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var i in avgEcWbs)
         {
@@ -219,13 +234,14 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         }
         
         // 5. Get cached data for today and yesterday
-        var today = DateHelper.GetVietnamDate();
+        var today = DateHelper.GetVietnamTimeNow();
         var yesterday = today.AddDays(-1);
-        var todayData = GoogleSheetsHelper.GetCachedEcData(_cache, $"{today:dd-MM}");
-        var yesterdayData = GoogleSheetsHelper.GetCachedEcData(_cache, $"{yesterday:dd-MM}");
-
+        var todayData = await CaculateEachEcClasses(today, avgEcApp);
+        var yesterdayDataRaw = await _ecRepo.GetNameAndPercByDateAsync($"{yesterday:dd-MM}");
+        var yesterdayData = yesterdayDataRaw.ToDictionary(e => e.Name, e => e.AvgPercent);
+        
         // 6. Sync to Google Sheets
-        var updatedAt = DateHelper.GetVietnamNow();
+        var updatedAt = DateHelper.GetVietnamTimeNow();
         await _googleSheetsApi.SyncStudentDataAsync(editSheetId, sheetName,
             sheetData, classMergeRanges, updatedAt, avgApp, avgWb, todayData, yesterdayData, 
             avgEcWb, cancellationToken);

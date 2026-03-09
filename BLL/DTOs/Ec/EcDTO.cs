@@ -1,6 +1,6 @@
-namespace DAL.Data.Models;
+﻿namespace BLL.DTOs.Ec;
 
-public class Ec
+public class EcDTO
 {
     public ulong Id { get; set; }
     public string Name { get; set; } = string.Empty;
