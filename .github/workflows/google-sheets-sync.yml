@@ -2,8 +2,8 @@ name: Google Sheets Sync
 
 on:
   schedule:
-    # Chạy vào lúc 1:00 AM giờ Việt Nam (18:00 UTC) mỗi ngày
-    - cron: '0 18 * * *'
+    # Chạy mỗi 4 tiếng (1:00, 5:00, 9:00, 13:00, 17:00, 21:00 giờ Việt Nam / UTC+7)
+    - cron: '0 */4 * * *'
   # Thêm nút bấm chạy thủ công trên giao diện GitHub
   workflow_dispatch:
 

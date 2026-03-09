@@ -93,7 +93,10 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         }
 
         if (avgEcAppDate.Count > 0)
-            await _ecRepo.BulkCreateAsync($"{now:dd-MM}", dtos);
+        {
+            try { await _ecRepo.BulkCreateAsync($"{now:dd-MM}", dtos); }
+            catch { /* DB unavailable, continue without saving */ }
+        }
         return avgEcAppDate;
     }
     
@@ -237,8 +240,13 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
         var today = DateHelper.GetVietnamTimeNow();
         var yesterday = today.AddDays(-1);
         var todayData = await CaculateEachEcClasses(today, avgEcApp);
-        var yesterdayDataRaw = await _ecRepo.GetNameAndPercByDateAsync($"{yesterday:dd-MM}");
-        var yesterdayData = yesterdayDataRaw.ToDictionary(e => e.Name, e => e.AvgPercent);
+        Dictionary<string, string> yesterdayData;
+        try
+        {
+            var yesterdayDataRaw = await _ecRepo.GetNameAndPercByDateAsync($"{yesterday:dd-MM}");
+            yesterdayData = yesterdayDataRaw.ToDictionary(e => e.Name, e => e.AvgPercent);
+        }
+        catch { yesterdayData = new Dictionary<string, string>(); }
         
         // 6. Sync to Google Sheets
         var updatedAt = DateHelper.GetVietnamTimeNow();
