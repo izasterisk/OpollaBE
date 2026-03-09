@@ -57,7 +57,7 @@ public class DateHelper
     /// Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
     /// </summary>
     /// <returns>DateTime theo múi giờ Việt Nam</returns>
-    public static DateTime GetVietnamNow()
+    public static DateTime GetVietnamTimeNow()
     {
         TimeZoneInfo vietnamTimeZone;
         try
@@ -70,9 +70,4 @@ public class DateHelper
         }
         return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
     }
-    
-    /// <summary>
-    /// Lấy ngày hiện tại theo múi giờ Việt Nam (UTC+7)
-    /// </summary>
-    public static DateOnly GetVietnamDate() => DateOnly.FromDateTime(GetVietnamNow());
 }

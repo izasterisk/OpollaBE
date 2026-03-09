@@ -32,7 +32,7 @@ public class EcConfiguration : IEntityTypeConfiguration<Ec>
         builder.Property(e => e.AvgPercent)
             .HasColumnName("AvgPercent")
             .IsRequired()
-            .HasPrecision(5, 2);
+            .HasMaxLength(50);
 
         builder.Property(e => e.CreatedAt)
             .HasColumnName("CreatedAt")

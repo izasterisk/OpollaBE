@@ -4,8 +4,9 @@ using BLL.Helper;
 using Infrastructure;
 using DotNetEnv;
 using DAL.Data;
-using DAL.IRepository;
+using DAL.Helper;
 using DAL.Repository;
+using BLL.Interfaces.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 // Load .env file if exists (for local development)
@@ -48,6 +49,9 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IGoogleSheetsSyncService, GoogleSheetsSyncService>();
+
+// Configure AutoMapper
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(AutoMapperConfig).Assembly));
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();
