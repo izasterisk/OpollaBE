@@ -182,6 +182,12 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             foreach (var student in students)
             {
                 string studentAppCompletionStr;
+                string studentName;
+                
+                if (student.NickName != null)
+                    studentName = student.Name + " (" + student.NickName + ")";
+                else
+                    studentName = student.Name;
                 
                 if (student.HomeLearningReport == null || student.HomeLearningReport.AppCompletion == null)
                 {
@@ -213,7 +219,7 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                 {
                     classItem.Name,           // Column A: Class name
                     classAppCompletionStr,    // Column B: Class App Completion
-                    student.Name,             // Column C: Student name
+                    studentName,              // Column C: Student name
                     studentAppCompletionStr,  // Column D: Student App Completion
                     workbookCompletionStr,    // Column E: Workbook Completion
                     ecName                    // Column F: EC Name
