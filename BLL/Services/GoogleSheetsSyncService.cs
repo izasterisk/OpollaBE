@@ -183,7 +183,9 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
             {
                 string studentAppCompletionStr;
                 string studentName;
+                double studentAppCompletionValue = 0;
                 
+                // Xác định tên học sinh có nickname không
                 if (student.NickName != null)
                     studentName = student.Name + " (" + student.NickName + ")";
                 else
@@ -197,21 +199,21 @@ public class GoogleSheetsSyncService : IGoogleSheetsSyncService
                 {
                     var studentAppCompletion = student.HomeLearningReport.AppCompletion;
                     studentAppCompletionStr = GoogleSheetsHelper.FormatPercentage(studentAppCompletion);
-
-                    var studentAppCompletionValue = studentAppCompletion ?? 0;
-                    totalApp += studentAppCompletionValue;
-                    appCounted++;
+                    studentAppCompletionValue = studentAppCompletion.Value;
+                }
+                
+                appCounted++;
+                totalApp += studentAppCompletionValue;
                     
-                    if (ecName != "UNDEFINED")
+                if (ecName != "UNDEFINED")
+                {
+                    if (avgEcApp.TryGetValue(firstWord, out var total))
                     {
-                        if (avgEcApp.TryGetValue(firstWord, out var total))
-                        {
-                            avgEcApp[firstWord] = (total.TotalValue + studentAppCompletionValue, total.Count + 1);
-                        }
-                        else
-                        {
-                            avgEcApp[firstWord] = (studentAppCompletionValue, 1);
-                        }
+                        avgEcApp[firstWord] = (total.TotalValue + studentAppCompletionValue, total.Count + 1);
+                    }
+                    else
+                    {
+                        avgEcApp[firstWord] = (studentAppCompletionValue, 1);
                     }
                 }
                 
