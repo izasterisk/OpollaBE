@@ -28,12 +28,9 @@ public class EcRepo : IEcRepo
 
     public async Task BulkCreateAsync(string date, List<EcDTO> records)
     {
-        var existing = await _context.Ecs
+        await _context.Ecs
             .Where(e => e.Date == date)
-            .ToListAsync();
-
-        if (existing.Count > 0)
-            _context.Ecs.RemoveRange(existing);
+            .ExecuteDeleteAsync();
 
         var entities = _mapper.Map<List<Ec>>(records);
         await _context.Ecs.AddRangeAsync(entities);
