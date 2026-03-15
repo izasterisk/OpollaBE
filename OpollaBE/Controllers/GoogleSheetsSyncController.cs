@@ -16,7 +16,7 @@ public class GoogleSheetsSyncController : BaseController
         _syncService = syncService;
     }
 
-    [HttpGet("check")]
+    [HttpHead("check")]
     public IActionResult Check() => Ok();
 
     /// <summary>
