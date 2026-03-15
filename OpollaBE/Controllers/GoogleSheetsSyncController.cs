@@ -10,15 +10,14 @@ namespace OpollaBE.Controllers;
 public class GoogleSheetsSyncController : BaseController
 {
     private readonly IGoogleSheetsSyncService _syncService;
-    private readonly ILogger<GoogleSheetsSyncController> _logger;
 
-    public GoogleSheetsSyncController(
-        IGoogleSheetsSyncService syncService,
-        ILogger<GoogleSheetsSyncController> logger)
+    public GoogleSheetsSyncController(IGoogleSheetsSyncService syncService)
     {
         _syncService = syncService;
-        _logger = logger;
     }
+
+    [HttpGet("check")]
+    public IActionResult Check() => Ok();
 
     /// <summary>
     /// Sync student data (Class, ClassAppCompletion, StudentName, StudentAppCompletion) to Google Sheets
@@ -36,17 +35,12 @@ public class GoogleSheetsSyncController : BaseController
             var validationResult = ValidateModel();
             if (validationResult != null) return validationResult;
 
-            _logger.LogInformation("Starting Google Sheets sync...");
-            
             await _syncService.SyncStudentDataToSheetAsync(request, cancellationToken);
-            
-            _logger.LogInformation("Google Sheets sync completed");
 
             return SuccessResponse("Cập nhật thành công");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in SyncToGoogleSheets: {Message}", ex.Message);
             return HandleException(ex);
         }
     }
